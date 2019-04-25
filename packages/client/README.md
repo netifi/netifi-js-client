@@ -1,14 +1,14 @@
-# proteus-js-client
+# netifi-js-client
 
-proteus-js-client allows Javascript apps to connect to a Proteus broker and access services. By providing a destination name and login credentials, the app becomes a new destination on the network, and can both send and receive messages using the RSocket protocol.
+netifi-js-client allows Javascript apps to connect to a Netifi broker and access services. By providing a destination name and login credentials, the app becomes a new destination on the network, and can both send and receive messages using the RSocket protocol.
 
 ## Installation
 
 ```
-yarn add proteus-js-client
+yarn add netifi-js-client
 ```
 
-The Proteus client should be passed a configuration object. Here are its properties:
+The Netifi client should be passed a configuration object. Here are its properties:
 
 ```
 const config = {
@@ -37,7 +37,7 @@ const config = {
   responder // TODO: describe
 };
 
-const proteusClient = Proteus.create(config);
+const netifiClient = Netifi.create(config);
 ```
 
-For more information on how to set up the client, go to [docs.netifi.com](https://docs.netifi.com) and click the menu link "Proteus JS Client".
+For more information on how to set up the client, go to [docs.netifi.com](https://docs.netifi.com) and click the menu link "Netifi JS Client".

@@ -66,7 +66,7 @@ export function encodeFrame(frame: Frame): Buffer {
     default:
       invariant(
         false,
-        'ProteusBinaryFraming: Unsupported frame type `%s`.',
+        'NetifiBinaryFraming: Unsupported frame type `%s`.',
         getFrameTypeName(frame.type),
       );
   }
@@ -94,7 +94,7 @@ export function decodeFrame(buffer: Buffer): Frame {
     default:
       invariant(
         false,
-        'ProteusBinaryFraming: Unsupported frame type `%s`.',
+        'NetifiBinaryFraming: Unsupported frame type `%s`.',
         getFrameTypeName(type),
       );
   }

@@ -1,6 +1,6 @@
 import {Span, Endpoint, Annotation} from '../zipkin/proto3/zipkin_pb';
 import Long from 'long';
-import {ProteusTracingServiceClient} from '../proteus/testing/tracing_rsocket_pb';
+import {NetifiTracingServiceClient} from '../netifi/testing/tracing_rsocket_pb';
 import {QueuingFlowableProcessor} from 'rsocket-rpc-core';
 import {ISubscription} from 'rsocket-types';
 
@@ -34,26 +34,26 @@ export class ZipkinRecorder extends DefaultRecorder {
   _shared: boolean;
   _once: boolean;
   _sub: ISubscription;
-  _client: ProteusTracingServiceClient;
+  _client: NetifiTracingServiceClient;
   _inputSpans: QueuingFlowableProcessor<Span>;
 
   constructor(
-    proteusGateway,
+    netifiGateway,
     localService?: string,
     remoteService?: string,
     shared?: boolean,
   ) {
     super();
 
-    this._group = proteusGateway.myGroup();
-    this._destination = proteusGateway.myDestination();
+    this._group = netifiGateway.myGroup();
+    this._destination = netifiGateway.myDestination();
     this._localService = localService;
     this._remoteService = remoteService;
     this._shared = shared;
     this._once = false;
-    if (proteusGateway) {
-      this._client = new ProteusTracingServiceClient(
-        proteusGateway.group('com.netifi.proteus.tracing'),
+    if (netifiGateway) {
+      this._client = new NetifiTracingServiceClient(
+        netifiGateway.group('com.netifi.tracing'),
       );
       this._inputSpans = new QueuingFlowableProcessor();
     }
@@ -121,8 +121,8 @@ function mapSpan(
     result.setParentId(span.parentId.toString());
   }
   // kind
-  if (span.tags['proteus.type']) {
-    const kindString = span.tags['proteus.type'].toString().toUpperCase();
+  if (span.tags['netifi.type']) {
+    const kindString = span.tags['netifi.type'].toString().toUpperCase();
     const kind = Span.Kind[kindString] || Span.Kind.SPAN_KIND_UNSPECIFIED;
     result.setKind(kind);
   }
