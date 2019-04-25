@@ -5,7 +5,7 @@ import BasicSpan from './span';
 import {TextMapPropagator} from './propagation';
 import {DefaultSampler} from './sampler';
 import {ZipkinRecorder} from './recorder';
-import {Proteus} from 'proteus-js-client';
+import {Netifi} from 'netifi-js-client';
 
 // Implement https://github.com/opentracing/opentracing-javascript/blob/master/src/tracer.js
 export class BasicTracer extends Tracer {
@@ -25,7 +25,7 @@ export class BasicTracer extends Tracer {
    */
   constructor(
     {sampler, recorder} = {},
-    gateway?: Proteus,
+    gateway?: Netifi,
     url?: string,
     localService?: string,
     remoteService?: string,
@@ -33,9 +33,9 @@ export class BasicTracer extends Tracer {
   ) {
     super();
     this._sampler = sampler || new DefaultSampler();
-    const proteusGateway =
+    const netifiGateway =
       gateway ||
-      Proteus.create({
+      Netifi.create({
         setup: {
           group: 'default-tracer-demo',
           accessKey: 9007199254740991,
@@ -48,7 +48,7 @@ export class BasicTracer extends Tracer {
 
     this._recorder =
       recorder ||
-      new ZipkinRecorder(proteusGateway, localService, remoteService, shared);
+      new ZipkinRecorder(netifiGateway, localService, remoteService, shared);
     this._textPropagator = new TextMapPropagator(this);
   }
 

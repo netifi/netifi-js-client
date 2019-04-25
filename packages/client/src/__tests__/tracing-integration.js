@@ -2,24 +2,24 @@
 
 const {ZipkinTracingService} = require('../../dist/tracing/tracingService');
 const {BasicTracer} = require('../../dist/tracing/tracer');
-const {Ping} = require('../proteus/testing/ping-pong_pb');
+const {Ping} = require('../netifi/testing/ping-pong_pb');
 const {
   PingPongServiceClient,
   PingPongServiceServer,
-} = require('../proteus/testing/ping-pong_rsocket_pb');
+} = require('../netifi/testing/ping-pong_rsocket_pb');
 const {
-  ProteusTracingServiceServer,
-} = require('../proteus/testing/tracing_rsocket_pb');
-const Proteus = require('../../dist/Proteus').default;
+  NetifiTracingServiceServer,
+} = require('../netifi/testing/tracing_rsocket_pb');
+const Netifi = require('../../dist/Netifi').default;
 const {PongService} = require('../../dist/tracing/pongService');
 const {BufferEncoders} = require('rsocket-core');
 const RSocketTcpClient = require('rsocket-tcp-client').default;
-const ProteusTlsClient = require('../../dist/ProteusTlsClient').default;
+const NetifiTlsClient = require('../../dist/NetifiTlsClient').default;
 const WebSocket = require('ws');
 global.WebSocket = WebSocket;
 
 const url = 'wss://localhost:8101/';
-const tcpConnection = new ProteusTlsClient(
+const tcpConnection = new NetifiTlsClient(
   {
     host: 'localhost',
     port: 8001,
@@ -28,14 +28,14 @@ const tcpConnection = new ProteusTlsClient(
   BufferEncoders,
 );
 
-// let tracingServiceGateway = Proteus.create({
+// let tracingServiceGateway = Netifi.create({
 //   setup: {
-//     group: 'com.netifi.proteus.tracing',
+//     group: 'com.netifi.tracing',
 //     accessKey: 9007199254740991,
 //     accessToken: 'kTBDVtfRBO4tHOnZzSyY5ym2kfY=',
 //   },
 //   transport: {
-//     connection: new ProteusTlsClient(
+//     connection: new NetifiTlsClient(
 //       {
 //         host: 'localhost',
 //         port: 8001,
@@ -52,8 +52,8 @@ const tcpConnection = new ProteusTlsClient(
 // });
 //
 // tracingServiceGateway.addService(
-//   'io.netifi.proteus.tracing.ProteusTracingService',
-//   new ProteusTracingServiceServer(
+//   'com.netifi.tracing.NetifiTracingService',
+//   new NetifiTracingServiceServer(
 //     new ZipkinTracingService('localhost', 9411, '/api/v2/spans'),
 //   ),
 // );
@@ -70,7 +70,7 @@ const tcpConnection = new ProteusTlsClient(
 
 // setTimeout(() => {
 const clientOneId = 'thingOne';
-const clientGatewayOne = Proteus.create({
+const clientGatewayOne = Netifi.create({
   setup: {
     group: 'pinger',
     destination: clientOneId,
@@ -78,7 +78,7 @@ const clientGatewayOne = Proteus.create({
     accessToken: 'kTBDVtfRBO4tHOnZzSyY5ym2kfY=',
   },
   transport: {
-    connection: new ProteusTlsClient(
+    connection: new NetifiTlsClient(
       {
         host: 'localhost',
         port: 8001,
@@ -95,7 +95,7 @@ const clientGatewayOne = Proteus.create({
 });
 
 const clientTwoId = 'thingTwo';
-const clientGatewayTwo = Proteus.create({
+const clientGatewayTwo = Netifi.create({
   setup: {
     group: 'ponger',
     destination: clientTwoId,
@@ -103,7 +103,7 @@ const clientGatewayTwo = Proteus.create({
     accessToken: 'kTBDVtfRBO4tHOnZzSyY5ym2kfY=',
   },
   transport: {
-    connection: new ProteusTlsClient(
+    connection: new NetifiTlsClient(
       {
         host: 'localhost',
         port: 8001,
@@ -120,7 +120,7 @@ const clientGatewayTwo = Proteus.create({
 });
 
 clientGatewayOne.addService(
-  'io.netifi.proteus.tracing.PingPongService',
+  'com.netifi.tracing.PingPongService',
   new PingPongServiceServer(
     new PongService(),
     new BasicTracer(
@@ -129,7 +129,7 @@ clientGatewayOne.addService(
       },
       clientGatewayOne,
       null /* no url needed */,
-      'io.netifi.proteus.tracing.PingPongService',
+      'com.netifi.tracing.PingPongService',
       null,
       true,
     ),
@@ -145,13 +145,13 @@ const clientOne = new PingPongServiceClient(
     clientGatewayOne,
     null /* no url needed */,
     'Integration.Test',
-    'io.netifi.proteus.tracing.PingPongService',
+    'com.netifi.tracing.PingPongService',
     false,
   ),
 );
 
 clientGatewayTwo.addService(
-  'io.netifi.proteus.tracing.PingPongService',
+  'com.netifi.tracing.PingPongService',
   new PingPongServiceServer(
     new PongService(),
     new BasicTracer(
@@ -160,7 +160,7 @@ clientGatewayTwo.addService(
       },
       clientGatewayTwo,
       null /* no url needed */,
-      'io.netifi.proteus.tracing.PingPongService',
+      'com.netifi.tracing.PingPongService',
       null,
       false,
     ),
@@ -177,7 +177,7 @@ const clientTwo = new PingPongServiceClient(
     clientGatewayTwo,
     null /* no url needed */,
     'Integration.Test',
-    'io.netifi.proteus.tracing.PingPongService',
+    'com.netifi.tracing.PingPongService',
     false,
   ),
 );

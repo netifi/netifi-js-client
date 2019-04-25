@@ -1,5 +1,5 @@
 //
-//    Copyright 2019 The Proteus Authors
+//    Copyright 2019 Netifi Inc.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -14,12 +14,12 @@
 //    limitations under the License.
 syntax = "proto3";
 
-package io.netifi.proteus.broker.info;
+package com.netifi.broker.info;
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
-option java_package = "io.netifi.proteus.broker.info";
+option java_package = "com.netifi.broker.info";
 option java_outer_classname = "BrokerInfo";
 option java_multiple_files = true;
 

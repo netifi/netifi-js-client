@@ -2,7 +2,7 @@
 
 // Original file comments:
 //
-//    Copyright 2019 The Proteus Authors
+//    Copyright 2019 Netifi Inc.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -22,17 +22,17 @@ var rsocket_rpc_tracing = require('rsocket-rpc-tracing');
 var rsocket_rpc_metrics = require('rsocket-rpc-metrics').Metrics;
 var rsocket_flowable = require('rsocket-flowable');
 var google_protobuf_empty_pb = require('google-protobuf/google/protobuf/empty_pb.js');
-var proteus_broker_mgmt_pb = require('../proteus/broker_mgmt_pb.js');
-var proteus_broker_info_pb = require('../proteus/broker_info_pb.js');
+var netifi_broker_mgmt_pb = require('../netifi/broker_mgmt_pb.js');
+var netifi_broker_info_pb = require('../netifi/broker_info_pb.js');
 
 var ClusterManagementServiceClient = function () {
   function ClusterManagementServiceClient(rs, tracer, meterRegistry) {
     this._rs = rs;
     this._tracer = tracer;
-    this.closeDestinationTrace = rsocket_rpc_tracing.trace(tracer, "ClusterManagementService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.ClusterManagementService"}, {"method": "closeDestination"}, {"rsocket.rpc.role": "client"});
-    this.closeDestinationMetrics = rsocket_rpc_metrics.timed(meterRegistry, "ClusterManagementService", {"service": "io.netifi.proteus.broker.info.ClusterManagementService"}, {"method": "closeDestination"}, {"role": "client"});
-    this.closeGroupTrace = rsocket_rpc_tracing.trace(tracer, "ClusterManagementService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.ClusterManagementService"}, {"method": "closeGroup"}, {"rsocket.rpc.role": "client"});
-    this.closeGroupMetrics = rsocket_rpc_metrics.timed(meterRegistry, "ClusterManagementService", {"service": "io.netifi.proteus.broker.info.ClusterManagementService"}, {"method": "closeGroup"}, {"role": "client"});
+    this.closeDestinationTrace = rsocket_rpc_tracing.trace(tracer, "ClusterManagementService", {"rsocket.rpc.service": "com.netifi.broker.info.ClusterManagementService"}, {"method": "closeDestination"}, {"rsocket.rpc.role": "client"});
+    this.closeDestinationMetrics = rsocket_rpc_metrics.timed(meterRegistry, "ClusterManagementService", {"service": "com.netifi.broker.info.ClusterManagementService"}, {"method": "closeDestination"}, {"role": "client"});
+    this.closeGroupTrace = rsocket_rpc_tracing.trace(tracer, "ClusterManagementService", {"rsocket.rpc.service": "com.netifi.broker.info.ClusterManagementService"}, {"method": "closeGroup"}, {"rsocket.rpc.role": "client"});
+    this.closeGroupMetrics = rsocket_rpc_metrics.timed(meterRegistry, "ClusterManagementService", {"service": "com.netifi.broker.info.ClusterManagementService"}, {"method": "closeGroup"}, {"role": "client"});
   }
   // Closes connections to a specific set of destinations across broker cluster
   ClusterManagementServiceClient.prototype.closeDestination = function closeDestination(messages, metadata) {
@@ -44,7 +44,7 @@ var ClusterManagementServiceClient = function () {
         var metadataBuf ;
           this._rs.requestChannel(messages.map(function (message) {
             dataBuf = Buffer.from(message.serializeBinary());
-            metadataBuf = rsocket_rpc_frames.encodeMetadata('io.netifi.proteus.broker.info.ClusterManagementService', 'closeDestination', tracingMetadata, metadata || Buffer.alloc(0));
+            metadataBuf = rsocket_rpc_frames.encodeMetadata('com.netifi.broker.info.ClusterManagementService', 'closeDestination', tracingMetadata, metadata || Buffer.alloc(0));
             return {
               data: dataBuf,
               metadata: metadataBuf
@@ -52,7 +52,7 @@ var ClusterManagementServiceClient = function () {
           })).map(function (payload) {
             //TODO: resolve either 'https://github.com/rsocket/rsocket-js/issues/19' or 'https://github.com/google/protobuf/issues/1319'
             var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
-            return proteus_broker_mgmt_pb.Ack.deserializeBinary(binary);
+            return netifi_broker_mgmt_pb.Ack.deserializeBinary(binary);
           }).subscribe(subscriber);
         })
       )
@@ -68,7 +68,7 @@ var ClusterManagementServiceClient = function () {
         var metadataBuf ;
           this._rs.requestChannel(messages.map(function (message) {
             dataBuf = Buffer.from(message.serializeBinary());
-            metadataBuf = rsocket_rpc_frames.encodeMetadata('io.netifi.proteus.broker.info.ClusterManagementService', 'closeGroup', tracingMetadata, metadata || Buffer.alloc(0));
+            metadataBuf = rsocket_rpc_frames.encodeMetadata('com.netifi.broker.info.ClusterManagementService', 'closeGroup', tracingMetadata, metadata || Buffer.alloc(0));
             return {
               data: dataBuf,
               metadata: metadataBuf
@@ -76,7 +76,7 @@ var ClusterManagementServiceClient = function () {
           })).map(function (payload) {
             //TODO: resolve either 'https://github.com/rsocket/rsocket-js/issues/19' or 'https://github.com/google/protobuf/issues/1319'
             var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
-            return proteus_broker_mgmt_pb.Ack.deserializeBinary(binary);
+            return netifi_broker_mgmt_pb.Ack.deserializeBinary(binary);
           }).subscribe(subscriber);
         })
       )
@@ -91,10 +91,10 @@ var ClusterManagementServiceServer = function () {
   function ClusterManagementServiceServer(service, tracer, meterRegistry) {
     this._service = service;
     this._tracer = tracer;
-    this.closeDestinationTrace = rsocket_rpc_tracing.traceAsChild(tracer, "ClusterManagementService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.ClusterManagementService"}, {"method": "closeDestination"}, {"rsocket.rpc.role": "server"});
-    this.closeDestinationMetrics = rsocket_rpc_metrics.timed(meterRegistry, "ClusterManagementService", {"service": "io.netifi.proteus.broker.info.ClusterManagementService"}, {"method": "closeDestination"}, {"role": "server"});
-    this.closeGroupTrace = rsocket_rpc_tracing.traceAsChild(tracer, "ClusterManagementService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.ClusterManagementService"}, {"method": "closeGroup"}, {"rsocket.rpc.role": "server"});
-    this.closeGroupMetrics = rsocket_rpc_metrics.timed(meterRegistry, "ClusterManagementService", {"service": "io.netifi.proteus.broker.info.ClusterManagementService"}, {"method": "closeGroup"}, {"role": "server"});
+    this.closeDestinationTrace = rsocket_rpc_tracing.traceAsChild(tracer, "ClusterManagementService", {"rsocket.rpc.service": "com.netifi.broker.info.ClusterManagementService"}, {"method": "closeDestination"}, {"rsocket.rpc.role": "server"});
+    this.closeDestinationMetrics = rsocket_rpc_metrics.timed(meterRegistry, "ClusterManagementService", {"service": "com.netifi.broker.info.ClusterManagementService"}, {"method": "closeDestination"}, {"role": "server"});
+    this.closeGroupTrace = rsocket_rpc_tracing.traceAsChild(tracer, "ClusterManagementService", {"rsocket.rpc.service": "com.netifi.broker.info.ClusterManagementService"}, {"method": "closeGroup"}, {"rsocket.rpc.role": "server"});
+    this.closeGroupMetrics = rsocket_rpc_metrics.timed(meterRegistry, "ClusterManagementService", {"service": "com.netifi.broker.info.ClusterManagementService"}, {"method": "closeGroup"}, {"role": "server"});
     this._channelSwitch = (payload, restOfMessages) => {
       if (payload.metadata == null) {
         return rsocket_flowable.Flowable.error(new Error('metadata is empty'));
@@ -106,7 +106,7 @@ var ClusterManagementServiceServer = function () {
         case 'closeDestination':
           deserializedMessages = restOfMessages.map(payload => {
             var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
-            return proteus_broker_info_pb.Destination.deserializeBinary(binary);
+            return netifi_broker_info_pb.Destination.deserializeBinary(binary);
           });
           return this.closeDestinationMetrics(
             this.closeDestinationTrace(spanContext)(
@@ -123,7 +123,7 @@ var ClusterManagementServiceServer = function () {
         case 'closeGroup':
           deserializedMessages = restOfMessages.map(payload => {
             var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
-            return proteus_broker_info_pb.Group.deserializeBinary(binary);
+            return netifi_broker_info_pb.Group.deserializeBinary(binary);
           });
           return this.closeGroupMetrics(
             this.closeGroupTrace(spanContext)(

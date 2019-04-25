@@ -36,7 +36,7 @@ import {CONNECTION_STATUS} from 'rsocket-types';
 /**
  * A TCP transport client for use in node environments.
  */
-export class ProteusTcpConnection implements DuplexConnection {
+export class NetifiTcpConnection implements DuplexConnection {
   _buffer: Buffer;
   _encoders: ?Encoders<*>;
   _receivers: Set<ISubscriber<Frame>>;
@@ -204,7 +204,7 @@ export class ProteusTcpConnection implements DuplexConnection {
 /**
  * A TLS transport client for use in node environments.
  */
-export default class ProteusTlsClient extends ProteusTcpConnection {
+export default class NetifiTlsClient extends NetifiTcpConnection {
   _options: tls$connectOptions;
 
   constructor(options: tls$connectOptions, encoders: ?Encoders<*>) {
@@ -215,7 +215,7 @@ export default class ProteusTlsClient extends ProteusTcpConnection {
   connect(): void {
     invariant(
       this.getConnectionState().kind === 'NOT_CONNECTED',
-      'ProteusTlsClient: Cannot connect(), a connection is already ' +
+      'NetifiTlsClient: Cannot connect(), a connection is already ' +
         'established.',
     );
     this.setConnectionStatus(CONNECTION_STATUS.CONNECTING);

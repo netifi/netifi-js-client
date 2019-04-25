@@ -1,5 +1,5 @@
 //
-//    Copyright 2019 The Proteus Authors
+//    Copyright 2019 Netifi Inc.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -14,20 +14,20 @@
 //    limitations under the License.
 syntax = "proto3";
 
-package io.netifi.proteus.broker.info;
+package com.netifi.broker.info;
 
 import "google/protobuf/empty.proto";
-import "proteus/broker_mgmt.proto";
-import "proteus/broker_info.proto";
+import "netifi/broker_mgmt.proto";
+import "netifi/broker_info.proto";
 
-option java_package = "io.netifi.proteus.cluster.mgmt";
+option java_package = "com.netifi.cluster.mgmt";
 option java_outer_classname = "ClusterManagement";
 option java_multiple_files = true;
 
 service ClusterManagementService {
     // Closes connections to a specific set of destinations across broker cluster
-    rpc closeDestination (stream io.netifi.proteus.broker.info.Destination) returns (Ack) {}
+    rpc closeDestination (stream com.netifi.broker.info.Destination) returns (Ack) {}
 
     // Closes all connections to a specific group cluster-wide
-    rpc closeGroup (stream io.netifi.proteus.broker.info.Group) returns (Ack) {}
+    rpc closeGroup (stream com.netifi.broker.info.Group) returns (Ack) {}
 }

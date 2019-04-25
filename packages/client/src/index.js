@@ -18,14 +18,14 @@
 
 'use strict';
 
-import Proteus from './Proteus';
+import Netifi from './Netifi';
 
 import {
   AccessKey,
   AccessKeyParameters,
   AccessToken,
   AccessTokenInfo,
-} from './proteus/accesskey_info_pb';
+} from './netifi/accesskey_info_pb';
 
 import {
   Broker,
@@ -35,33 +35,33 @@ import {
   Cluster,
   Id,
   Tag,
-} from './proteus/broker_info_pb';
+} from './netifi/broker_info_pb';
 
-import {Brokers, Connection} from './proteus/broker_mgmt_pb';
+import {Brokers, Connection} from './netifi/broker_mgmt_pb';
 
 import {
   AccessKeyInfoServiceClient,
   AccessKeyInfoServiceServer,
-} from './proteus/accesskey_info_rsocket_pb';
+} from './netifi/accesskey_info_rsocket_pb';
 import {
   BrokerInfoServiceClient,
   BrokerInfoServiceServer,
-} from './proteus/broker_info_rsocket_pb';
+} from './netifi/broker_info_rsocket_pb';
 import {
   BrokerManagementServiceClient,
   BrokerManagementServiceServer,
-} from './proteus/broker_mgmt_rsocket_pb';
+} from './netifi/broker_mgmt_rsocket_pb';
 import {
   ClusterManagementServiceClient,
   ClusterManagementServiceServer,
-} from './proteus/cluster_mgmt_rsocket_pb';
+} from './netifi/cluster_mgmt_rsocket_pb';
 
 import toObservable from './rx/FlowableAdapter';
 
 /**
  * The public API of the `client` package.
  */
-export type {ProteusConfig} from './Proteus';
+export type {NetifiConfig} from './Netifi';
 
 export {
   AccessKey,
@@ -84,7 +84,7 @@ export {
   Event,
   Group,
   Id,
-  Proteus,
+  Netifi,
   Tag,
   toObservable,
 };

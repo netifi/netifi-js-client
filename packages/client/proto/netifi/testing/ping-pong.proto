@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package io.netifi.proteus.tracing;
+package com.netifi.tracing;
 import "google/protobuf/empty.proto";
 import "rsocket/options.proto";
 

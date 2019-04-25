@@ -2,7 +2,7 @@
 
 // Original file comments:
 //
-//    Copyright 2019 The Proteus Authors
+//    Copyright 2019 Netifi Inc.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ var rsocket_rpc_core = require('rsocket-rpc-core');
 var rsocket_rpc_tracing = require('rsocket-rpc-tracing');
 var rsocket_rpc_metrics = require('rsocket-rpc-metrics').Metrics;
 var rsocket_flowable = require('rsocket-flowable');
-var proteus_broker_info_pb = require('../proteus/broker_info_pb.js');
+var netifi_broker_info_pb = require('../netifi/broker_info_pb.js');
 var google_protobuf_empty_pb = require('google-protobuf/google/protobuf/empty_pb.js');
 var google_protobuf_timestamp_pb = require('google-protobuf/google/protobuf/timestamp_pb.js');
 
@@ -29,32 +29,32 @@ var BrokerInfoServiceClient = function () {
   function BrokerInfoServiceClient(rs, tracer, meterRegistry) {
     this._rs = rs;
     this._tracer = tracer;
-    this.brokersTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "brokers"}, {"rsocket.rpc.role": "client"});
-    this.brokersMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "brokers"}, {"role": "client"});
-    this.groupsTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "groups"}, {"rsocket.rpc.role": "client"});
-    this.groupsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "groups"}, {"role": "client"});
-    this.destinationsTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "destinations"}, {"rsocket.rpc.role": "client"});
-    this.destinationsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "destinations"}, {"role": "client"});
-    this.destinationsByBrokerAndGroupTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "destinationsByBrokerAndGroup"}, {"rsocket.rpc.role": "client"});
-    this.destinationsByBrokerAndGroupMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "destinationsByBrokerAndGroup"}, {"role": "client"});
-    this.destinationsByGroupTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "destinationsByGroup"}, {"rsocket.rpc.role": "client"});
-    this.destinationsByGroupMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "destinationsByGroup"}, {"role": "client"});
-    this.brokersWithGroupTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "brokersWithGroup"}, {"rsocket.rpc.role": "client"});
-    this.brokersWithGroupMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "brokersWithGroup"}, {"role": "client"});
-    this.brokerWithDestinationTrace = rsocket_rpc_tracing.traceSingle(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "brokerWithDestination"}, {"rsocket.rpc.role": "client"});
-    this.brokerWithDestinationMetrics = rsocket_rpc_metrics.timedSingle(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "brokerWithDestination"}, {"role": "client"});
-    this.streamGroupEventsTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamGroupEvents"}, {"rsocket.rpc.role": "client"});
-    this.streamGroupEventsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamGroupEvents"}, {"role": "client"});
-    this.streamDestinationEventsTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamDestinationEvents"}, {"rsocket.rpc.role": "client"});
-    this.streamDestinationEventsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamDestinationEvents"}, {"role": "client"});
-    this.streamBrokerEventsTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamBrokerEvents"}, {"rsocket.rpc.role": "client"});
-    this.streamBrokerEventsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamBrokerEvents"}, {"role": "client"});
-    this.streamBrokerRollupEventsTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamBrokerRollupEvents"}, {"rsocket.rpc.role": "client"});
-    this.streamBrokerRollupEventsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamBrokerRollupEvents"}, {"role": "client"});
-    this.streamDestinationRollupEventsTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamDestinationRollupEvents"}, {"rsocket.rpc.role": "client"});
-    this.streamDestinationRollupEventsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamDestinationRollupEvents"}, {"role": "client"});
-    this.streamDestinationEventsByDestinationNameTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamDestinationEventsByDestinationName"}, {"rsocket.rpc.role": "client"});
-    this.streamDestinationEventsByDestinationNameMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamDestinationEventsByDestinationName"}, {"role": "client"});
+    this.brokersTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "brokers"}, {"rsocket.rpc.role": "client"});
+    this.brokersMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "brokers"}, {"role": "client"});
+    this.groupsTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "groups"}, {"rsocket.rpc.role": "client"});
+    this.groupsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "groups"}, {"role": "client"});
+    this.destinationsTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "destinations"}, {"rsocket.rpc.role": "client"});
+    this.destinationsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "destinations"}, {"role": "client"});
+    this.destinationsByBrokerAndGroupTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "destinationsByBrokerAndGroup"}, {"rsocket.rpc.role": "client"});
+    this.destinationsByBrokerAndGroupMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "destinationsByBrokerAndGroup"}, {"role": "client"});
+    this.destinationsByGroupTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "destinationsByGroup"}, {"rsocket.rpc.role": "client"});
+    this.destinationsByGroupMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "destinationsByGroup"}, {"role": "client"});
+    this.brokersWithGroupTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "brokersWithGroup"}, {"rsocket.rpc.role": "client"});
+    this.brokersWithGroupMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "brokersWithGroup"}, {"role": "client"});
+    this.brokerWithDestinationTrace = rsocket_rpc_tracing.traceSingle(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "brokerWithDestination"}, {"rsocket.rpc.role": "client"});
+    this.brokerWithDestinationMetrics = rsocket_rpc_metrics.timedSingle(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "brokerWithDestination"}, {"role": "client"});
+    this.streamGroupEventsTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamGroupEvents"}, {"rsocket.rpc.role": "client"});
+    this.streamGroupEventsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamGroupEvents"}, {"role": "client"});
+    this.streamDestinationEventsTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamDestinationEvents"}, {"rsocket.rpc.role": "client"});
+    this.streamDestinationEventsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamDestinationEvents"}, {"role": "client"});
+    this.streamBrokerEventsTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamBrokerEvents"}, {"rsocket.rpc.role": "client"});
+    this.streamBrokerEventsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamBrokerEvents"}, {"role": "client"});
+    this.streamBrokerRollupEventsTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamBrokerRollupEvents"}, {"rsocket.rpc.role": "client"});
+    this.streamBrokerRollupEventsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamBrokerRollupEvents"}, {"role": "client"});
+    this.streamDestinationRollupEventsTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamDestinationRollupEvents"}, {"rsocket.rpc.role": "client"});
+    this.streamDestinationRollupEventsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamDestinationRollupEvents"}, {"role": "client"});
+    this.streamDestinationEventsByDestinationNameTrace = rsocket_rpc_tracing.trace(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamDestinationEventsByDestinationName"}, {"rsocket.rpc.role": "client"});
+    this.streamDestinationEventsByDestinationNameMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamDestinationEventsByDestinationName"}, {"role": "client"});
   }
   BrokerInfoServiceClient.prototype.brokers = function brokers(message, metadata) {
     const map = {};
@@ -62,14 +62,14 @@ var BrokerInfoServiceClient = function () {
       this.brokersTrace(map)(new rsocket_flowable.Flowable(subscriber => {
         var dataBuf = Buffer.from(message.serializeBinary());
         var tracingMetadata = rsocket_rpc_tracing.mapToBuffer(map);
-        var metadataBuf = rsocket_rpc_frames.encodeMetadata('io.netifi.proteus.broker.info.BrokerInfoService', 'Brokers', tracingMetadata, metadata || Buffer.alloc(0));
+        var metadataBuf = rsocket_rpc_frames.encodeMetadata('com.netifi.broker.info.BrokerInfoService', 'Brokers', tracingMetadata, metadata || Buffer.alloc(0));
           this._rs.requestStream({
             data: dataBuf,
             metadata: metadataBuf
           }).map(function (payload) {
             //TODO: resolve either 'https://github.com/rsocket/rsocket-js/issues/19' or 'https://github.com/google/protobuf/issues/1319'
             var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
-            return proteus_broker_info_pb.Broker.deserializeBinary(binary);
+            return netifi_broker_info_pb.Broker.deserializeBinary(binary);
           }).subscribe(subscriber);
         })
       )
@@ -81,14 +81,14 @@ var BrokerInfoServiceClient = function () {
       this.groupsTrace(map)(new rsocket_flowable.Flowable(subscriber => {
         var dataBuf = Buffer.from(message.serializeBinary());
         var tracingMetadata = rsocket_rpc_tracing.mapToBuffer(map);
-        var metadataBuf = rsocket_rpc_frames.encodeMetadata('io.netifi.proteus.broker.info.BrokerInfoService', 'Groups', tracingMetadata, metadata || Buffer.alloc(0));
+        var metadataBuf = rsocket_rpc_frames.encodeMetadata('com.netifi.broker.info.BrokerInfoService', 'Groups', tracingMetadata, metadata || Buffer.alloc(0));
           this._rs.requestStream({
             data: dataBuf,
             metadata: metadataBuf
           }).map(function (payload) {
             //TODO: resolve either 'https://github.com/rsocket/rsocket-js/issues/19' or 'https://github.com/google/protobuf/issues/1319'
             var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
-            return proteus_broker_info_pb.Group.deserializeBinary(binary);
+            return netifi_broker_info_pb.Group.deserializeBinary(binary);
           }).subscribe(subscriber);
         })
       )
@@ -100,14 +100,14 @@ var BrokerInfoServiceClient = function () {
       this.destinationsTrace(map)(new rsocket_flowable.Flowable(subscriber => {
         var dataBuf = Buffer.from(message.serializeBinary());
         var tracingMetadata = rsocket_rpc_tracing.mapToBuffer(map);
-        var metadataBuf = rsocket_rpc_frames.encodeMetadata('io.netifi.proteus.broker.info.BrokerInfoService', 'Destinations', tracingMetadata, metadata || Buffer.alloc(0));
+        var metadataBuf = rsocket_rpc_frames.encodeMetadata('com.netifi.broker.info.BrokerInfoService', 'Destinations', tracingMetadata, metadata || Buffer.alloc(0));
           this._rs.requestStream({
             data: dataBuf,
             metadata: metadataBuf
           }).map(function (payload) {
             //TODO: resolve either 'https://github.com/rsocket/rsocket-js/issues/19' or 'https://github.com/google/protobuf/issues/1319'
             var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
-            return proteus_broker_info_pb.Destination.deserializeBinary(binary);
+            return netifi_broker_info_pb.Destination.deserializeBinary(binary);
           }).subscribe(subscriber);
         })
       )
@@ -119,14 +119,14 @@ var BrokerInfoServiceClient = function () {
       this.destinationsByBrokerAndGroupTrace(map)(new rsocket_flowable.Flowable(subscriber => {
         var dataBuf = Buffer.from(message.serializeBinary());
         var tracingMetadata = rsocket_rpc_tracing.mapToBuffer(map);
-        var metadataBuf = rsocket_rpc_frames.encodeMetadata('io.netifi.proteus.broker.info.BrokerInfoService', 'DestinationsByBrokerAndGroup', tracingMetadata, metadata || Buffer.alloc(0));
+        var metadataBuf = rsocket_rpc_frames.encodeMetadata('com.netifi.broker.info.BrokerInfoService', 'DestinationsByBrokerAndGroup', tracingMetadata, metadata || Buffer.alloc(0));
           this._rs.requestStream({
             data: dataBuf,
             metadata: metadataBuf
           }).map(function (payload) {
             //TODO: resolve either 'https://github.com/rsocket/rsocket-js/issues/19' or 'https://github.com/google/protobuf/issues/1319'
             var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
-            return proteus_broker_info_pb.Destination.deserializeBinary(binary);
+            return netifi_broker_info_pb.Destination.deserializeBinary(binary);
           }).subscribe(subscriber);
         })
       )
@@ -138,14 +138,14 @@ var BrokerInfoServiceClient = function () {
       this.destinationsByGroupTrace(map)(new rsocket_flowable.Flowable(subscriber => {
         var dataBuf = Buffer.from(message.serializeBinary());
         var tracingMetadata = rsocket_rpc_tracing.mapToBuffer(map);
-        var metadataBuf = rsocket_rpc_frames.encodeMetadata('io.netifi.proteus.broker.info.BrokerInfoService', 'DestinationsByGroup', tracingMetadata, metadata || Buffer.alloc(0));
+        var metadataBuf = rsocket_rpc_frames.encodeMetadata('com.netifi.broker.info.BrokerInfoService', 'DestinationsByGroup', tracingMetadata, metadata || Buffer.alloc(0));
           this._rs.requestStream({
             data: dataBuf,
             metadata: metadataBuf
           }).map(function (payload) {
             //TODO: resolve either 'https://github.com/rsocket/rsocket-js/issues/19' or 'https://github.com/google/protobuf/issues/1319'
             var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
-            return proteus_broker_info_pb.Destination.deserializeBinary(binary);
+            return netifi_broker_info_pb.Destination.deserializeBinary(binary);
           }).subscribe(subscriber);
         })
       )
@@ -157,14 +157,14 @@ var BrokerInfoServiceClient = function () {
       this.brokersWithGroupTrace(map)(new rsocket_flowable.Flowable(subscriber => {
         var dataBuf = Buffer.from(message.serializeBinary());
         var tracingMetadata = rsocket_rpc_tracing.mapToBuffer(map);
-        var metadataBuf = rsocket_rpc_frames.encodeMetadata('io.netifi.proteus.broker.info.BrokerInfoService', 'BrokersWithGroup', tracingMetadata, metadata || Buffer.alloc(0));
+        var metadataBuf = rsocket_rpc_frames.encodeMetadata('com.netifi.broker.info.BrokerInfoService', 'BrokersWithGroup', tracingMetadata, metadata || Buffer.alloc(0));
           this._rs.requestStream({
             data: dataBuf,
             metadata: metadataBuf
           }).map(function (payload) {
             //TODO: resolve either 'https://github.com/rsocket/rsocket-js/issues/19' or 'https://github.com/google/protobuf/issues/1319'
             var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
-            return proteus_broker_info_pb.Broker.deserializeBinary(binary);
+            return netifi_broker_info_pb.Broker.deserializeBinary(binary);
           }).subscribe(subscriber);
         })
       )
@@ -176,14 +176,14 @@ var BrokerInfoServiceClient = function () {
       this.brokerWithDestinationTrace(map)(new rsocket_flowable.Single(subscriber => {
         var dataBuf = Buffer.from(message.serializeBinary());
         var tracingMetadata = rsocket_rpc_tracing.mapToBuffer(map);
-        var metadataBuf = rsocket_rpc_frames.encodeMetadata('io.netifi.proteus.broker.info.BrokerInfoService', 'BrokerWithDestination', tracingMetadata, metadata || Buffer.alloc(0));
+        var metadataBuf = rsocket_rpc_frames.encodeMetadata('com.netifi.broker.info.BrokerInfoService', 'BrokerWithDestination', tracingMetadata, metadata || Buffer.alloc(0));
           this._rs.requestResponse({
             data: dataBuf,
             metadata: metadataBuf
           }).map(function (payload) {
             //TODO: resolve either 'https://github.com/rsocket/rsocket-js/issues/19' or 'https://github.com/google/protobuf/issues/1319'
             var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
-            return proteus_broker_info_pb.Broker.deserializeBinary(binary);
+            return netifi_broker_info_pb.Broker.deserializeBinary(binary);
           }).subscribe(subscriber);
         })
       )
@@ -195,14 +195,14 @@ var BrokerInfoServiceClient = function () {
       this.streamGroupEventsTrace(map)(new rsocket_flowable.Flowable(subscriber => {
         var dataBuf = Buffer.from(message.serializeBinary());
         var tracingMetadata = rsocket_rpc_tracing.mapToBuffer(map);
-        var metadataBuf = rsocket_rpc_frames.encodeMetadata('io.netifi.proteus.broker.info.BrokerInfoService', 'streamGroupEvents', tracingMetadata, metadata || Buffer.alloc(0));
+        var metadataBuf = rsocket_rpc_frames.encodeMetadata('com.netifi.broker.info.BrokerInfoService', 'streamGroupEvents', tracingMetadata, metadata || Buffer.alloc(0));
           this._rs.requestStream({
             data: dataBuf,
             metadata: metadataBuf
           }).map(function (payload) {
             //TODO: resolve either 'https://github.com/rsocket/rsocket-js/issues/19' or 'https://github.com/google/protobuf/issues/1319'
             var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
-            return proteus_broker_info_pb.Event.deserializeBinary(binary);
+            return netifi_broker_info_pb.Event.deserializeBinary(binary);
           }).subscribe(subscriber);
         })
       )
@@ -214,14 +214,14 @@ var BrokerInfoServiceClient = function () {
       this.streamDestinationEventsTrace(map)(new rsocket_flowable.Flowable(subscriber => {
         var dataBuf = Buffer.from(message.serializeBinary());
         var tracingMetadata = rsocket_rpc_tracing.mapToBuffer(map);
-        var metadataBuf = rsocket_rpc_frames.encodeMetadata('io.netifi.proteus.broker.info.BrokerInfoService', 'streamDestinationEvents', tracingMetadata, metadata || Buffer.alloc(0));
+        var metadataBuf = rsocket_rpc_frames.encodeMetadata('com.netifi.broker.info.BrokerInfoService', 'streamDestinationEvents', tracingMetadata, metadata || Buffer.alloc(0));
           this._rs.requestStream({
             data: dataBuf,
             metadata: metadataBuf
           }).map(function (payload) {
             //TODO: resolve either 'https://github.com/rsocket/rsocket-js/issues/19' or 'https://github.com/google/protobuf/issues/1319'
             var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
-            return proteus_broker_info_pb.Event.deserializeBinary(binary);
+            return netifi_broker_info_pb.Event.deserializeBinary(binary);
           }).subscribe(subscriber);
         })
       )
@@ -233,14 +233,14 @@ var BrokerInfoServiceClient = function () {
       this.streamBrokerEventsTrace(map)(new rsocket_flowable.Flowable(subscriber => {
         var dataBuf = Buffer.from(message.serializeBinary());
         var tracingMetadata = rsocket_rpc_tracing.mapToBuffer(map);
-        var metadataBuf = rsocket_rpc_frames.encodeMetadata('io.netifi.proteus.broker.info.BrokerInfoService', 'streamBrokerEvents', tracingMetadata, metadata || Buffer.alloc(0));
+        var metadataBuf = rsocket_rpc_frames.encodeMetadata('com.netifi.broker.info.BrokerInfoService', 'streamBrokerEvents', tracingMetadata, metadata || Buffer.alloc(0));
           this._rs.requestStream({
             data: dataBuf,
             metadata: metadataBuf
           }).map(function (payload) {
             //TODO: resolve either 'https://github.com/rsocket/rsocket-js/issues/19' or 'https://github.com/google/protobuf/issues/1319'
             var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
-            return proteus_broker_info_pb.Event.deserializeBinary(binary);
+            return netifi_broker_info_pb.Event.deserializeBinary(binary);
           }).subscribe(subscriber);
         })
       )
@@ -252,14 +252,14 @@ var BrokerInfoServiceClient = function () {
       this.streamBrokerRollupEventsTrace(map)(new rsocket_flowable.Flowable(subscriber => {
         var dataBuf = Buffer.from(message.serializeBinary());
         var tracingMetadata = rsocket_rpc_tracing.mapToBuffer(map);
-        var metadataBuf = rsocket_rpc_frames.encodeMetadata('io.netifi.proteus.broker.info.BrokerInfoService', 'streamBrokerRollupEvents', tracingMetadata, metadata || Buffer.alloc(0));
+        var metadataBuf = rsocket_rpc_frames.encodeMetadata('com.netifi.broker.info.BrokerInfoService', 'streamBrokerRollupEvents', tracingMetadata, metadata || Buffer.alloc(0));
           this._rs.requestStream({
             data: dataBuf,
             metadata: metadataBuf
           }).map(function (payload) {
             //TODO: resolve either 'https://github.com/rsocket/rsocket-js/issues/19' or 'https://github.com/google/protobuf/issues/1319'
             var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
-            return proteus_broker_info_pb.Event.deserializeBinary(binary);
+            return netifi_broker_info_pb.Event.deserializeBinary(binary);
           }).subscribe(subscriber);
         })
       )
@@ -271,14 +271,14 @@ var BrokerInfoServiceClient = function () {
       this.streamDestinationRollupEventsTrace(map)(new rsocket_flowable.Flowable(subscriber => {
         var dataBuf = Buffer.from(message.serializeBinary());
         var tracingMetadata = rsocket_rpc_tracing.mapToBuffer(map);
-        var metadataBuf = rsocket_rpc_frames.encodeMetadata('io.netifi.proteus.broker.info.BrokerInfoService', 'streamDestinationRollupEvents', tracingMetadata, metadata || Buffer.alloc(0));
+        var metadataBuf = rsocket_rpc_frames.encodeMetadata('com.netifi.broker.info.BrokerInfoService', 'streamDestinationRollupEvents', tracingMetadata, metadata || Buffer.alloc(0));
           this._rs.requestStream({
             data: dataBuf,
             metadata: metadataBuf
           }).map(function (payload) {
             //TODO: resolve either 'https://github.com/rsocket/rsocket-js/issues/19' or 'https://github.com/google/protobuf/issues/1319'
             var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
-            return proteus_broker_info_pb.Event.deserializeBinary(binary);
+            return netifi_broker_info_pb.Event.deserializeBinary(binary);
           }).subscribe(subscriber);
         })
       )
@@ -290,14 +290,14 @@ var BrokerInfoServiceClient = function () {
       this.streamDestinationEventsByDestinationNameTrace(map)(new rsocket_flowable.Flowable(subscriber => {
         var dataBuf = Buffer.from(message.serializeBinary());
         var tracingMetadata = rsocket_rpc_tracing.mapToBuffer(map);
-        var metadataBuf = rsocket_rpc_frames.encodeMetadata('io.netifi.proteus.broker.info.BrokerInfoService', 'streamDestinationEventsByDestinationName', tracingMetadata, metadata || Buffer.alloc(0));
+        var metadataBuf = rsocket_rpc_frames.encodeMetadata('com.netifi.broker.info.BrokerInfoService', 'streamDestinationEventsByDestinationName', tracingMetadata, metadata || Buffer.alloc(0));
           this._rs.requestStream({
             data: dataBuf,
             metadata: metadataBuf
           }).map(function (payload) {
             //TODO: resolve either 'https://github.com/rsocket/rsocket-js/issues/19' or 'https://github.com/google/protobuf/issues/1319'
             var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
-            return proteus_broker_info_pb.Event.deserializeBinary(binary);
+            return netifi_broker_info_pb.Event.deserializeBinary(binary);
           }).subscribe(subscriber);
         })
       )
@@ -312,32 +312,32 @@ var BrokerInfoServiceServer = function () {
   function BrokerInfoServiceServer(service, tracer, meterRegistry) {
     this._service = service;
     this._tracer = tracer;
-    this.brokersTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "brokers"}, {"rsocket.rpc.role": "server"});
-    this.brokersMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "brokers"}, {"role": "server"});
-    this.groupsTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "groups"}, {"rsocket.rpc.role": "server"});
-    this.groupsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "groups"}, {"role": "server"});
-    this.destinationsTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "destinations"}, {"rsocket.rpc.role": "server"});
-    this.destinationsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "destinations"}, {"role": "server"});
-    this.destinationsByBrokerAndGroupTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "destinationsByBrokerAndGroup"}, {"rsocket.rpc.role": "server"});
-    this.destinationsByBrokerAndGroupMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "destinationsByBrokerAndGroup"}, {"role": "server"});
-    this.destinationsByGroupTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "destinationsByGroup"}, {"rsocket.rpc.role": "server"});
-    this.destinationsByGroupMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "destinationsByGroup"}, {"role": "server"});
-    this.brokersWithGroupTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "brokersWithGroup"}, {"rsocket.rpc.role": "server"});
-    this.brokersWithGroupMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "brokersWithGroup"}, {"role": "server"});
-    this.brokerWithDestinationTrace = rsocket_rpc_tracing.traceSingleAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "brokerWithDestination"}, {"rsocket.rpc.role": "server"});
-    this.brokerWithDestinationMetrics = rsocket_rpc_metrics.timedSingle(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "brokerWithDestination"}, {"role": "server"});
-    this.streamGroupEventsTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamGroupEvents"}, {"rsocket.rpc.role": "server"});
-    this.streamGroupEventsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamGroupEvents"}, {"role": "server"});
-    this.streamDestinationEventsTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamDestinationEvents"}, {"rsocket.rpc.role": "server"});
-    this.streamDestinationEventsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamDestinationEvents"}, {"role": "server"});
-    this.streamBrokerEventsTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamBrokerEvents"}, {"rsocket.rpc.role": "server"});
-    this.streamBrokerEventsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamBrokerEvents"}, {"role": "server"});
-    this.streamBrokerRollupEventsTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamBrokerRollupEvents"}, {"rsocket.rpc.role": "server"});
-    this.streamBrokerRollupEventsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamBrokerRollupEvents"}, {"role": "server"});
-    this.streamDestinationRollupEventsTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamDestinationRollupEvents"}, {"rsocket.rpc.role": "server"});
-    this.streamDestinationRollupEventsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamDestinationRollupEvents"}, {"role": "server"});
-    this.streamDestinationEventsByDestinationNameTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamDestinationEventsByDestinationName"}, {"rsocket.rpc.role": "server"});
-    this.streamDestinationEventsByDestinationNameMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "io.netifi.proteus.broker.info.BrokerInfoService"}, {"method": "streamDestinationEventsByDestinationName"}, {"role": "server"});
+    this.brokersTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "brokers"}, {"rsocket.rpc.role": "server"});
+    this.brokersMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "brokers"}, {"role": "server"});
+    this.groupsTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "groups"}, {"rsocket.rpc.role": "server"});
+    this.groupsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "groups"}, {"role": "server"});
+    this.destinationsTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "destinations"}, {"rsocket.rpc.role": "server"});
+    this.destinationsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "destinations"}, {"role": "server"});
+    this.destinationsByBrokerAndGroupTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "destinationsByBrokerAndGroup"}, {"rsocket.rpc.role": "server"});
+    this.destinationsByBrokerAndGroupMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "destinationsByBrokerAndGroup"}, {"role": "server"});
+    this.destinationsByGroupTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "destinationsByGroup"}, {"rsocket.rpc.role": "server"});
+    this.destinationsByGroupMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "destinationsByGroup"}, {"role": "server"});
+    this.brokersWithGroupTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "brokersWithGroup"}, {"rsocket.rpc.role": "server"});
+    this.brokersWithGroupMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "brokersWithGroup"}, {"role": "server"});
+    this.brokerWithDestinationTrace = rsocket_rpc_tracing.traceSingleAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "brokerWithDestination"}, {"rsocket.rpc.role": "server"});
+    this.brokerWithDestinationMetrics = rsocket_rpc_metrics.timedSingle(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "brokerWithDestination"}, {"role": "server"});
+    this.streamGroupEventsTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamGroupEvents"}, {"rsocket.rpc.role": "server"});
+    this.streamGroupEventsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamGroupEvents"}, {"role": "server"});
+    this.streamDestinationEventsTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamDestinationEvents"}, {"rsocket.rpc.role": "server"});
+    this.streamDestinationEventsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamDestinationEvents"}, {"role": "server"});
+    this.streamBrokerEventsTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamBrokerEvents"}, {"rsocket.rpc.role": "server"});
+    this.streamBrokerEventsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamBrokerEvents"}, {"role": "server"});
+    this.streamBrokerRollupEventsTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamBrokerRollupEvents"}, {"rsocket.rpc.role": "server"});
+    this.streamBrokerRollupEventsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamBrokerRollupEvents"}, {"role": "server"});
+    this.streamDestinationRollupEventsTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamDestinationRollupEvents"}, {"rsocket.rpc.role": "server"});
+    this.streamDestinationRollupEventsMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamDestinationRollupEvents"}, {"role": "server"});
+    this.streamDestinationEventsByDestinationNameTrace = rsocket_rpc_tracing.traceAsChild(tracer, "BrokerInfoService", {"rsocket.rpc.service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamDestinationEventsByDestinationName"}, {"rsocket.rpc.role": "server"});
+    this.streamDestinationEventsByDestinationNameMetrics = rsocket_rpc_metrics.timed(meterRegistry, "BrokerInfoService", {"service": "com.netifi.broker.info.BrokerInfoService"}, {"method": "streamDestinationEventsByDestinationName"}, {"role": "server"});
     this._channelSwitch = (payload, restOfMessages) => {
       if (payload.metadata == null) {
         return rsocket_flowable.Flowable.error(new Error('metadata is empty'));
@@ -367,7 +367,7 @@ var BrokerInfoServiceServer = function () {
             this.brokerWithDestinationTrace(spanContext)(new rsocket_flowable.Single(subscriber => {
               var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
               return this._service
-                .brokerWithDestination(proteus_broker_info_pb.Destination.deserializeBinary(binary), payload.metadata)
+                .brokerWithDestination(netifi_broker_info_pb.Destination.deserializeBinary(binary), payload.metadata)
                 .map(function (message) {
                   return {
                     data: Buffer.from(message.serializeBinary()),
@@ -414,7 +414,7 @@ var BrokerInfoServiceServer = function () {
             this.groupsTrace(spanContext)(new rsocket_flowable.Flowable(subscriber => {
               var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
               return this._service
-                .groups(proteus_broker_info_pb.Broker.deserializeBinary(binary), payload.metadata)
+                .groups(netifi_broker_info_pb.Broker.deserializeBinary(binary), payload.metadata)
                 .map(function (message) {
                   return {
                     data: Buffer.from(message.serializeBinary()),
@@ -430,7 +430,7 @@ var BrokerInfoServiceServer = function () {
             this.destinationsTrace(spanContext)(new rsocket_flowable.Flowable(subscriber => {
               var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
               return this._service
-                .destinations(proteus_broker_info_pb.Broker.deserializeBinary(binary), payload.metadata)
+                .destinations(netifi_broker_info_pb.Broker.deserializeBinary(binary), payload.metadata)
                 .map(function (message) {
                   return {
                     data: Buffer.from(message.serializeBinary()),
@@ -446,7 +446,7 @@ var BrokerInfoServiceServer = function () {
             this.destinationsByBrokerAndGroupTrace(spanContext)(new rsocket_flowable.Flowable(subscriber => {
               var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
               return this._service
-                .destinationsByBrokerAndGroup(proteus_broker_info_pb.Group.deserializeBinary(binary), payload.metadata)
+                .destinationsByBrokerAndGroup(netifi_broker_info_pb.Group.deserializeBinary(binary), payload.metadata)
                 .map(function (message) {
                   return {
                     data: Buffer.from(message.serializeBinary()),
@@ -462,7 +462,7 @@ var BrokerInfoServiceServer = function () {
             this.destinationsByGroupTrace(spanContext)(new rsocket_flowable.Flowable(subscriber => {
               var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
               return this._service
-                .destinationsByGroup(proteus_broker_info_pb.Group.deserializeBinary(binary), payload.metadata)
+                .destinationsByGroup(netifi_broker_info_pb.Group.deserializeBinary(binary), payload.metadata)
                 .map(function (message) {
                   return {
                     data: Buffer.from(message.serializeBinary()),
@@ -478,7 +478,7 @@ var BrokerInfoServiceServer = function () {
             this.brokersWithGroupTrace(spanContext)(new rsocket_flowable.Flowable(subscriber => {
               var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
               return this._service
-                .brokersWithGroup(proteus_broker_info_pb.Group.deserializeBinary(binary), payload.metadata)
+                .brokersWithGroup(netifi_broker_info_pb.Group.deserializeBinary(binary), payload.metadata)
                 .map(function (message) {
                   return {
                     data: Buffer.from(message.serializeBinary()),
@@ -494,7 +494,7 @@ var BrokerInfoServiceServer = function () {
             this.streamGroupEventsTrace(spanContext)(new rsocket_flowable.Flowable(subscriber => {
               var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
               return this._service
-                .streamGroupEvents(proteus_broker_info_pb.Group.deserializeBinary(binary), payload.metadata)
+                .streamGroupEvents(netifi_broker_info_pb.Group.deserializeBinary(binary), payload.metadata)
                 .map(function (message) {
                   return {
                     data: Buffer.from(message.serializeBinary()),
@@ -510,7 +510,7 @@ var BrokerInfoServiceServer = function () {
             this.streamDestinationEventsTrace(spanContext)(new rsocket_flowable.Flowable(subscriber => {
               var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
               return this._service
-                .streamDestinationEvents(proteus_broker_info_pb.Destination.deserializeBinary(binary), payload.metadata)
+                .streamDestinationEvents(netifi_broker_info_pb.Destination.deserializeBinary(binary), payload.metadata)
                 .map(function (message) {
                   return {
                     data: Buffer.from(message.serializeBinary()),
@@ -574,7 +574,7 @@ var BrokerInfoServiceServer = function () {
             this.streamDestinationEventsByDestinationNameTrace(spanContext)(new rsocket_flowable.Flowable(subscriber => {
               var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
               return this._service
-                .streamDestinationEventsByDestinationName(proteus_broker_info_pb.Destination.deserializeBinary(binary), payload.metadata)
+                .streamDestinationEventsByDestinationName(netifi_broker_info_pb.Destination.deserializeBinary(binary), payload.metadata)
                 .map(function (message) {
                   return {
                     data: Buffer.from(message.serializeBinary()),

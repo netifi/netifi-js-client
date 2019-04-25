@@ -1,5 +1,5 @@
 //
-//    Copyright 2019 The Proteus Authors
+//    Copyright 2019 Netifi Inc.
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -14,12 +14,12 @@
 //    limitations under the License.
 syntax = "proto3";
 
-package io.netifi.proteus.broker.info;
+package com.netifi.broker.info;
 
 import "google/protobuf/empty.proto";
-import "proteus/broker_info.proto";
+import "netifi/broker_info.proto";
 
-option java_package = "io.netifi.proteus.broker.mgmt";
+option java_package = "com.netifi.broker.mgmt";
 option java_outer_classname = "BrokerManagement";
 option java_multiple_files = true;
 
@@ -27,11 +27,11 @@ message Ack {
 }
 
 message Brokers {
-    repeated io.netifi.proteus.broker.info.Broker brokers = 1;
+    repeated com.netifi.broker.info.Broker brokers = 1;
 }
 
 message Connection {
-  io.netifi.proteus.broker.info.Id id = 1;
+  com.netifi.broker.info.Id id = 1;
   string group = 2;
 }
 
@@ -55,13 +55,13 @@ service BrokerManagementService {
     rpc join (Brokers) returns (Ack) {}
 
     // Closes connections to a specific set of destinations
-    rpc closeDestination (stream io.netifi.proteus.broker.info.Destination) returns (Ack) {}
+    rpc closeDestination (stream com.netifi.broker.info.Destination) returns (Ack) {}
 
     // Closes connections to a specific set of groups
-    rpc closeGroup (stream io.netifi.proteus.broker.info.Group) returns (Ack) {}
+    rpc closeGroup (stream com.netifi.broker.info.Group) returns (Ack) {}
 
     // Closes connections to a specific set of brokers
-    rpc closeBroker (stream io.netifi.proteus.broker.info.Broker) returns (Ack) {}
+    rpc closeBroker (stream com.netifi.broker.info.Broker) returns (Ack) {}
 
     // Closes all connections on the broker - except broker to broker connections
     rpc closeDestinations (google.protobuf.Empty) returns (Ack) {}

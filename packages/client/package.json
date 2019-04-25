@@ -1,14 +1,16 @@
 {
-  "name": "proteus-js-client",
-  "repository": "https://github.com/netifi-proteus/proteus-js",
+  "name": "netifi-js-client",
+  "repository": "https://github.com/netifi/netifi-js",
   "version": "1.6.1",
-  "description": "Proteus JavaScript Client",
+  "description": "Netifi JavaScript Client",
   "contributors": [
     "Ryland Degnan <ryland@netifi.com>",
-    "Kyle Bahr <kyle@netifi.com>"
+    "Kyle Bahr <kyle@netifi.com>",
+    "Oleh Dokuka <oleh@netifi.com>",
+    "Duncan Alexander <duncan@netifi.com>"
   ],
   "bugs": {
-    "url": "https://github.com/netifi-proteus/proteus-js/issues"
+    "url": "https://github.com/netifi/netifi-js/issues"
   },
   "files": [
     "dist"

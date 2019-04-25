@@ -34,7 +34,7 @@ import ConnectionId from './frames/ConnectionId';
 import AdditionalFlags from './frames/AdditionalFlags';
 import uuid from 'uuid/v4';
 
-export type ProteusConfig = {|
+export type NetifiConfig = {|
   serializers?: PayloadSerializers<Buffer, Buffer>,
   setup: {|
     group: string,
@@ -58,7 +58,7 @@ export type ProteusConfig = {|
   responder?: Responder<Buffer, Buffer>,
 |};
 
-export default class Proteus {
+export default class Netifi {
   _client: RpcClient<Buffer, Buffer>;
   _group: string;
   _tags: Tags;
@@ -72,10 +72,10 @@ export default class Proteus {
   constructor(
     group: string,
     tags: Tags,
-    proteusClient: RpcClient<Buffer, Buffer>,
+    netifiClient: RpcClient<Buffer, Buffer>,
     requestHandler: RequestHandlingRSocket,
   ) {
-    this._client = proteusClient;
+    this._client = netifiClient;
     this._group = group;
     this._tags = tags;
     this._connect = () => {
@@ -160,7 +160,7 @@ export default class Proteus {
         });
 
         setTimeout(
-          () => proteusClient.connect().subscribe(this._connecting),
+          () => netifiClient.connect().subscribe(this._connecting),
           this.calculateRetryDuration(),
         );
 
@@ -221,19 +221,19 @@ export default class Proteus {
     return calculatedDuration * 1000;
   }
 
-  static create(config: ProteusConfig): Proteus {
+  static create(config: NetifiConfig): Netifi {
     invariant(
       config &&
         config.setup &&
         config.setup.accessKey &&
         config.setup.accessToken &&
         config.transport,
-      'Proteus: Falsey config is invalid. At minimum transport config, group, access key, and access token are required.',
+      'Netifi: Falsey config is invalid. At minimum transport config, group, access key, and access token are required.',
     );
 
     invariant(
       config.transport.connection || config.transport.url,
-      'Proteus: Transport config must supply a connection or a URL',
+      'Netifi: Transport config must supply a connection or a URL',
     );
 
     // default to GUID-y destination ID
@@ -315,6 +315,6 @@ export default class Proteus {
 
     const client = new RpcClient(finalConfig);
 
-    return new Proteus(config.setup.group, tags, client, requestHandler);
+    return new Netifi(config.setup.group, tags, client, requestHandler);
   }
 }

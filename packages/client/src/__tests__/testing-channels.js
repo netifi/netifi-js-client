@@ -1,15 +1,15 @@
 const {Annotation, Endpoint, Span} = require('../zipkin/proto3/zipkin_pb');
 const {
-  ProteusTracingServiceClient,
-} = require('../../dist/proteus/testing/tracing_rsocket_pb');
+  NetifiTracingServiceClient,
+} = require('../../dist/netifi/testing/tracing_rsocket_pb');
 
 const Long = require('long');
 const {ZipkinTracingService} = require('../../dist/tracing/tracingService');
 const {BasicTracer} = require('../../dist/tracing/tracer');
 const {
-  ProteusTracingServiceServer,
-} = require('../../dist/proteus/testing/tracing_rsocket_pb');
-const Proteus = require('../../../client/dist/Proteus').default;
+  NetifiTracingServiceServer,
+} = require('../../dist/netifi/testing/tracing_rsocket_pb');
+const Netifi = require('../../../client/dist/Netifi').default;
 const {BufferEncoders} = require('rsocket-core');
 const {Flowable} = require('rsocket-flowable');
 const RSocketTcpClient = require('rsocket-tcp-client').default;
@@ -22,9 +22,9 @@ const tcpConnection = new RSocketTcpClient(
   BufferEncoders,
 );
 
-const tracingServiceGateway = Proteus.create({
+const tracingServiceGateway = Netifi.create({
   setup: {
-    group: 'com.netifi.proteus.tracing',
+    group: 'com.netifi.tracing',
     accessKey: 9007199254740991,
     accessToken: 'kTBDVtfRBO4tHOnZzSyY5ym2kfY=',
   },
@@ -39,8 +39,8 @@ const tracingServiceGateway = Proteus.create({
 });
 
 tracingServiceGateway.addService(
-  'io.netifi.proteus.tracing.ProteusTracingService',
-  new ProteusTracingServiceServer(
+  'com.netifi.tracing.NetifiTracingService',
+  new NetifiTracingServiceServer(
     new ZipkinTracingService('localhost', 9411, '/api/v2/spans'),
   ),
 );
@@ -56,7 +56,7 @@ tracingServiceGateway._connect().subscribe({
 });
 
 const clientOneId = 'thingOne';
-const clientGateway = Proteus.create({
+const clientGateway = Netifi.create({
   setup: {
     group: 'pinger',
     destination: clientOneId,
@@ -85,8 +85,8 @@ const basicTracer = new BasicTracer(
   true,
 );
 
-const client = new ProteusTracingServiceClient(
-  clientGateway.group('com.netifi.proteus.tracing'),
+const client = new NetifiTracingServiceClient(
+  clientGateway.group('com.netifi.tracing'),
 );
 
 const spanStream = function() {
@@ -184,8 +184,8 @@ function mapSpan(
     result.setParentId(span.parentId.toString());
   }
   // kind
-  if (span.tags['proteus.type']) {
-    const kindString = span.tags['proteus.type'].toString().toUpperCase();
+  if (span.tags['netifi.type']) {
+    const kindString = span.tags['netifi.type'].toString().toUpperCase();
     const kind = Span.Kind[kindString] || Span.Kind.SPAN_KIND_UNSPECIFIED;
     result.setKind(kind);
   } else {

@@ -1,16 +1,16 @@
-# Netifi Proteus JavaScript
+# Netifi JavaScript
 
-[![Join the chat at https://gitter.im/netifi/general](https://badges.gitter.im/netifi/general.svg)](https://gitter.im/netifi/general) <a href='https://travis-ci.org/netifi-proteus/proteus-js'><img src='https://travis-ci.org/netifi-proteus/proteus-js.svg?branch=master'></a>
+[![Join the chat at https://gitter.im/netifi/general](https://badges.gitter.im/netifi/general.svg)](https://gitter.im/netifi/general)
 
 ## Bugs and Feedback
 
-For bugs, questions, and discussions please use the [Github Issues](https://github.com/netifi-proteus/proteus-js/issues).
+For bugs, questions, and discussions please use the [Github Issues](https://github.com/netifi/netifi-js/issues).
 
 ## Installation
 
-`yarn add proteus-js-client` OR
+`yarn add netifi-js-client` OR
 
-`npm install proteus-js-client`
+`npm install netifi-js-client`
 
 ## Building the monorepo
 
@@ -20,7 +20,7 @@ After installation, publish the build by running `lerna publish`.
 
 ## Basic Use
 
-Proteus JavaScript presumes the use of the Proteus RPC routing model.
+Netifi JavaScript presumes the use of the Netifi RPC routing model.
 
 The model assumes the user will access a router via a gateway, providing its `group` identification (e.g. `mobile-devices`, `admin-services`, or other user-defined string). Optionally the user can provide a unique `destination` id (any user provided string), or a UUID will be generated automatically.
 
@@ -29,11 +29,11 @@ Once connected, the user can leverage the gateway to create RSockets that will r
 A workflow would look something like this
 
 ```angular2html
-const Proteus = require('proteus-js-client');
-// This Proteus object acts as our gateway to the router
-const proteus = Proteus.create({
+const Netifi = require('netifi-js-client');
+// This Netifi object acts as our gateway to the router
+const netifi = Netifi.create({
   setup: {
-    group: 'proteus-example',
+    group: 'netifi-example',
   //destination: generated UUID if omitted  
     accessKey: 9007199254740991,
     accessToken: 'kTBDVtfRBO4tHOnZzSyY5ym2kfY='
@@ -44,10 +44,10 @@ const proteus = Proteus.create({
 });
 ```
 
-The configuration passed to `Proteus.create` has this Flow type spec
+The configuration passed to `Netifi.create` has this Flow type spec
 
 ```angular2html
-export type ProteusConfig = {|
+export type NetifiConfig = {|
   serializers?: PayloadSerializers<Buffer, Buffer>,
   setup: {|
     group: string,
@@ -77,14 +77,14 @@ A `Responder<Buffer, Buffer>` is created and simply implements the RSocket defin
 
 
 ### As a Client
-The `proteus` object is used to generate RSockets to be used by clients and to attach service handlers. This package includes the BrokerInfoServiceClient (routing services); here is an example of scanning all router instances and requesting all connected `destination`s
+The `netifi` object is used to generate RSockets to be used by clients and to attach service handlers. This package includes the BrokerInfoServiceClient (routing services); here is an example of scanning all router instances and requesting all connected `destination`s
 
 ```angular2html
 const { Empty } = require('google-protobuf/google/protobuf/empty_pb');
 
-// Here we use the proteus gateway to create an RSocket that routes 
+// Here we use the netifi gateway to create an RSocket that routes 
 // to any instance that is registered in the 'broker-services' group
-const brokerServices = new BrokerInfoServiceClient(proteus.group('broker-services'));
+const brokerServices = new BrokerInfoServiceClient(netifi.group('broker-services'));
 
 // This method is defined in the router services protobuf
 // rpc Brokers (google.protobuf.Empty) returns (stream Broker) {}
@@ -118,7 +118,7 @@ brokerServices.brokers(new Empty(), Buffer.alloc(0)).subscribe({
 
 ### As a Server
 
-The proteus gateway can provide services to the network as well as call out. To add services to the gateway, the user must provide a service implementation and the name of the service that clients will know to call.
+The netifi gateway can provide services to the network as well as call out. To add services to the gateway, the user must provide a service implementation and the name of the service that clients will know to call.
 
 Assume we have defined a service in protobuf
 
@@ -161,7 +161,7 @@ const localStringGenerator = {
 const randomStringService = new RandomStringGeneratorServer(localStringGenerator);
 
 // Register our RSocket random string service with our gateway by the service name that we expect Clients to use
-proteus.addService('io.proteus.demo.random-string-service', randomStringService);
+netifi.addService('com.netifi.demo.random-string-service', randomStringService);
 ```
 
 
@@ -175,7 +175,7 @@ We also provide a utility method to convert the `rsocket-flowable` types to the 
 ```angular2html
 
 const {Single, Flowable} = require('rsocket-flowable');
-const {toObservable} = require('proteus-js-client');
+const {toObservable} = require('netifi-js-client');
 
 const monoObservable = toObservable(Single.of("some value"));
 

@@ -4,7 +4,7 @@
 
 import http from 'http';
 import {Span} from '../zipkin/proto3/zipkin_pb';
-import {Ack} from '../proteus/testing/tracing_pb';
+import {Ack} from '../netifi/testing/tracing_pb';
 import {Flowable, Single} from 'rsocket-flowable';
 import {QueuingFlowableProcessor} from 'rsocket-rpc-core';
 
