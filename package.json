@@ -9,9 +9,6 @@
     "mocha": "--full-trace --require resources/mochaBootload packages/*/src/**/__tests__/**/*-test.js",
     "mocha_tdd": "--full-trace --watch --require resources/mochaBootload packages/*/src/**/__tests__/**/*-test.js"
   },
-  "publishConfig": {
-    "registry": "https://sonatype.netifiinc.com/repository/netifi-js/"
-  },
   "scripts": {
     "test": "npm run lint && npm run pretty-check && npm run testonly && npm run check",
     "testonly": "lerna run build && babel-node ./node_modules/.bin/_mocha $npm_package_options_mocha",
