@@ -42,6 +42,7 @@
     "google-protobuf": "^3.6.0",
     "ipaddr.js": "^1.9.0",
     "js-md5": "^0.7.3",
+    "lodash.clone": "^4.5.0",
     "long": "^4.0.0",
     "opentracing": "^0.14.3",
     "rsocket-flowable": "^0.0.10",
