@@ -19,6 +19,9 @@
     "rsocket"
   ],
   "main": "dist/index.js",
+  "publishConfig": {
+    "registry": "https://sonatype.netifiinc.com/repository/netifi-js-client/"
+  },
   "scripts": {
     "test": "echo 'Please run `npm test` from the root of the repo' && exit 1",
     "build": "npm run build-js && npm run build-flow",
