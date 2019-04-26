@@ -1,28 +1,64 @@
 {
-  "name": "netifi-js",
-  "private": true,
+  "name": "netifi-js-client",
+  "version": "1.6.1",
   "license": "SEE LICENSE IN ./LICENSE",
-  "workspaces": [
-    "packages/*"
+  "description": "Netifi JavaScript Client",
+  "contributors": [
+    "Ryland Degnan <ryland@netifi.com>",
+    "Kyle Bahr <kyle@netifi.com>",
+    "Oleh Dokuka <oleh@netifi.com>",
+    "Duncan Alexander <duncan@netifi.com>"
   ],
+  "bugs": {
+    "url": "https://github.com/netifi/netifi-js/issues"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "rsocket"
+  ],
+  "main": "dist/index.js",
+  "publishConfig": {
+    "registry": "https://sonatype.netifiinc.com/repository/netifi-js-client/"
+  },
   "options": {
-    "mocha": "--full-trace --require resources/mochaBootload packages/*/src/**/__tests__/**/*-test.js",
-    "mocha_tdd": "--full-trace --watch --require resources/mochaBootload packages/*/src/**/__tests__/**/*-test.js"
+    "mocha": "--full-trace --require resources/mochaBootload src/**/__tests__/**/*-test.js",
+    "mocha_tdd": "--full-trace --watch --require resources/mochaBootload src/**/__tests__/**/*-test.js"
   },
   "scripts": {
-    "test": "npm run lint && npm run pretty-check && npm run testonly && npm run check",
-    "testonly": "lerna run build && babel-node ./node_modules/.bin/_mocha $npm_package_options_mocha",
-    "t": "npm run testonly",
-    "lint": "eslint src packages/**/src || (printf '\\033[33mTry: \\033[7m npm run lint -- --fix \\033[0m\\n' && exit 1)",
-    "lint-check": "eslint --print-config .eslintrc.js | eslint-config-prettier-check",
+    "build-flow": "babel-node resources/buildFlow.js",
+    "build-js": "babel-node resources/buildJs.js",
+    "build": "npm run build-js && npm run build-flow",
     "check": "flow check --show-all-errors",
+    "lint-check": "eslint --print-config .eslintrc.js | eslint-config-prettier-check",
+    "lint": "eslint src || (printf '\\033[33mTry: \\033[7m npm run lint -- --fix \\033[0m\\n' && exit 1)",
     "prepublish": "node resources/prepublish.js",
-    "pretty": "node resources/pretty.js",
     "pretty-check": "node resources/pretty.js --check",
-    "protoc": "lerna run protoc"
+    "pretty": "node resources/pretty.js",
+    "protoc": "protoc --proto_path=proto --proto_path=node_modules/rsocket-rpc-protobuf/proto --js_out=import_style=commonjs,binary:src --rsocket_rpc_out=src --plugin=protoc-gen-rsocket_rpc=node_modules/.bin/rsocket_rpc_js_protoc_plugin proto/**/*.proto proto/**/**/*.proto node_modules/rsocket-rpc-protobuf/proto/rsocket/*.proto",
+    "t": "npm run testonly",
+    "test": "npm run lint && npm run pretty-check && npm run testonly && npm run check",
+    "testonly": "npm run build && babel-node ./node_modules/.bin/_mocha $npm_package_options_mocha"
   },
   "resolutions": {
     "eslint-scope": "3.7.1"
+  },
+  "dependencies": {
+    "google-protobuf": "^3.6.0",
+    "ipaddr.js": "^1.9.0",
+    "js-md5": "^0.7.3",
+    "lodash.clone": "^4.5.0",
+    "long": "^4.0.0",
+    "opentracing": "^0.14.3",
+    "rsocket-flowable": "^0.0.10",
+    "rsocket-rpc-core": "^0.0.4",
+    "rsocket-rpc-frames": "^0.0.3",
+    "rsocket-rpc-metrics": "^0.0.1",
+    "rsocket-rpc-tracing": "^0.0.3",
+    "rsocket-websocket-client": "^0.0.10",
+    "rxjs": "^6.2.2",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "babel-cli": "6.26.0",
@@ -50,16 +86,20 @@
     "babel-plugin-transform-regenerator": "6.24.1",
     "babel-types": "6.26.0",
     "chai": "4.1.2",
-    "eslint": "4.14.0",
     "eslint-config-prettier": "^2.3.0",
     "eslint-plugin-babel": "4.1.2",
     "eslint-plugin-dependencies": "2.4.0",
     "eslint-plugin-flowtype": "2.40.1",
     "eslint-plugin-prefer-object-spread": "1.2.1",
+    "eslint": "4.14.0",
     "flow-bin": "0.91.0",
-    "lerna": "^2.11.0",
+    "http": "^0.0.0",
     "mocha": "4.1.0",
     "prettier": "^1.5.3",
-    "rsocket-rpc-protobuf": "^0.1.5"
+    "rsocket-core": "^0.0.10",
+    "rsocket-rpc-protobuf": "^0.1.5",
+    "rsocket-tcp-client": "^0.0.10",
+    "rxjs-compat": "^6.2.2",
+    "ws": "^2.3.1"
   }
 }
