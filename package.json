@@ -20,7 +20,7 @@
   ],
   "main": "dist/index.js",
   "publishConfig": {
-    "registry": "https://sonatype.netifiinc.com/repository/netifi-js-client/"
+    "registry": "https://sonatype.netifiinc.com/repository/netifi-npm-snapshots/"
   },
   "options": {
     "mocha": "--full-trace --require resources/mochaBootload src/**/__tests__/**/*-test.js",
