@@ -16,7 +16,7 @@ For bugs, questions, and discussions please use the [Github Issues](https://gith
 
 Node modules at the root should be installed using `yarn install` exclusively, due to differences between the Yarn and npm registries.
 
-After installation, publish the build by running `lerna publish`.
+After installation, publish the build by running `yarn publish`.
 
 ## Basic Use
 
