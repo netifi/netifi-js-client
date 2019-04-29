@@ -1,4 +1,6 @@
-# Netifi JavaScript
+# Netifi JavaScript Client
+
+netifi-js-client allows Javascript apps to connect to a Netifi broker and access services. By providing a destination name and login credentials, the app becomes a new destination on the network, and can both send and receive messages using the RSocket protocol.
 
 [![Join the chat at https://gitter.im/netifi/general](https://badges.gitter.im/netifi/general.svg)](https://gitter.im/netifi/general)
 
@@ -12,12 +14,6 @@ For bugs, questions, and discussions please use the [Github Issues](https://gith
 
 `npm install netifi-js-client`
 
-## Building the monorepo
-
-Node modules at the root should be installed using `yarn install` exclusively, due to differences between the Yarn and npm registries.
-
-After installation, publish the build by running `yarn publish`.
-
 ## Basic Use
 
 Netifi JavaScript presumes the use of the Netifi RPC routing model.
@@ -28,7 +24,7 @@ Once connected, the user can leverage the gateway to create RSockets that will r
 
 A workflow would look something like this
 
-```angular2html
+```
 const Netifi = require('netifi-js-client');
 // This Netifi object acts as our gateway to the router
 const netifi = Netifi.create({
@@ -93,9 +89,7 @@ brokerServices.brokers(new Empty(), Buffer.alloc(0)).subscribe({
   onComplete: () => console.log('All brokers scanned'),
   onError: error => console.error(error),
   onNext: broker => {
-
     console.log("Scanning destinations connected to broker", broker);
-  
     // Get Stream of All Destinations on Broker, defined in the router services protobuf
     // rpc Destinations (Broker) returns (stream Destination) {}
   
@@ -124,37 +118,36 @@ Assume we have defined a service in protobuf
 
 ```angular2html
 service RandomStringGenerator {
-
-    // Returns a random string between size 'min' and 'max' defined in the RandomStringRequest
-    rpc GenerateString (RandomStringRequest) returns (RandomStringResponse) {}
+  // Returns a random string between size 'min' and 'max' defined in the RandomStringRequest
+  rpc GenerateString (RandomStringRequest) returns (RandomStringResponse) {}
 }
 
 message RandomStringRequest {
-    int32 min = 1;
-    int32 max = 2;
+  int32 min = 1;
+  int32 max = 2;
 }
 
 message RandomStringResponse {
-    string generated = 1;
+  string generated = 1;
 }
 ```
 
 And we have used the `rsocket-rpc-protobuf` generator for the Client and Server classes.
 
-```angular2html
+```
 // A local implementation that given a random string request, generates a Single<RandomStringResponse>
 const localStringGenerator = {
-    generateString: (message, metadata) => {
-        const min = message.getMin();
-        const max = message.getMax();
+  generateString: (message, metadata) => {
+    const min = message.getMin();
+    const max = message.getMax();
 
-        const size = Math.floor(Math.random() * max) + min;
-        let word = "";
-        for(var j = 0; j < size; j++){
-            word += generateChar();
-        }
-        return Single.of(nextWord);
+    const size = Math.floor(Math.random() * max) + min;
+    let word = "";
+    for(var j = 0; j < size; j++){
+      word += generateChar();
     }
+    return Single.of(nextWord);
+  }
 };
 
 // We wrap our local implementation in the protobuf-generated Server code that unwraps and dispatches requests    
@@ -164,23 +157,19 @@ const randomStringService = new RandomStringGeneratorServer(localStringGenerator
 netifi.addService('com.netifi.demo.random-string-service', randomStringService);
 ```
 
-
 Now our gateway can generate RSockets for the purpose of reaching out to the network and can register handlers so that others on the network can use our services!
 
+For more information on how to set up the client, go to [docs.netifi.com](https://docs.netifi.com) and click the menu link "Netifi JS Client".
 
 ## Observables
 
 We also provide a utility method to convert the `rsocket-flowable` types to the more familiar `Observable`.
 
-```angular2html
-
+```
 const {Single, Flowable} = require('rsocket-flowable');
 const {toObservable} = require('netifi-js-client');
-
 const monoObservable = toObservable(Single.of("some value"));
-
 const manyObservable = toObservable(Flowable.just(...[1, 2, 3, 4]));
-
 ```
 
 This loses the semantic of backpressure (i.e. `onSubscribe` and an `ISubscription` with `request n`/`cancel` methods), but may be more palatable to developers with an existing RxJS codebase. 
