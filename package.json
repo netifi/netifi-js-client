@@ -1,6 +1,6 @@
 {
   "name": "netifi-js-client",
-  "version": "1.6.2-SNAPSHOT-0",
+  "version": "1.6.2-SNAPSHOT-1",
   "license": "SEE LICENSE IN ./LICENSE",
   "description": "Netifi JavaScript Client",
   "contributors": [
@@ -83,12 +83,12 @@
     "babel-plugin-transform-regenerator": "6.24.1",
     "babel-types": "6.26.0",
     "chai": "4.1.2",
+    "eslint": "4.14.0",
     "eslint-config-prettier": "^2.3.0",
     "eslint-plugin-babel": "4.1.2",
     "eslint-plugin-dependencies": "2.4.0",
     "eslint-plugin-flowtype": "2.40.1",
     "eslint-plugin-prefer-object-spread": "1.2.1",
-    "eslint": "4.14.0",
     "flow-bin": "0.91.0",
     "http": "^0.0.0",
     "mocha": "4.1.0",
