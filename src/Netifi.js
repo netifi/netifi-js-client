@@ -29,7 +29,7 @@ import {DeferredConnectingRSocket, UnwrappingRSocket} from './rsocket';
 import {FrameTypes, encodeFrame} from './frames';
 import type {Tags} from './frames';
 
-import RSocketWebSocketClient from 'rsocket-websocket-client';
+import RSocketWebSocketClient from 'rsocket-websocket-client/build/RSocketWebSocketClient';
 import ConnectionId from './frames/ConnectionId';
 import AdditionalFlags from './frames/AdditionalFlags';
 import uuid from 'uuid/v4';
@@ -63,7 +63,7 @@ export default class Netifi {
   _group: string;
   _tags: Tags;
   _connect: () => Single<ReactiveSocket<Buffer, Buffer>>;
-  _connecting: Object;
+  _connectionStatus: Object;
   _connection: ReactiveSocket<Buffer, Buffer>;
   _requestHandler: RequestHandlingRSocket;
   _lastConnectionAttemptTs: number;
@@ -81,14 +81,14 @@ export default class Netifi {
     this._connect = () => {
       if (this._connection) {
         return Single.of(this._connection);
-      } else if (this._connecting) {
+      } else if (this._connectionStatus) {
         return new Single(subscriber => {
-          this._connecting.subscribe(subscriber);
+          this._connectionStatus.subscribe(subscriber);
         });
       } else {
         /** * This is a useful Publisher implementation that wraps could feasibly wrap the Single type ** */
         /** * Might be useful to clean up and contribute back or put in a utility or something ** */
-        this._connecting = (function() {
+        this._connectionStatus = (function() {
           const _subscribers = [];
           let _connection: ReactiveSocket<Buffer, Buffer>;
           let _error: Error;
@@ -146,7 +146,7 @@ export default class Netifi {
           };
         })();
 
-        this._connecting.subscribe({
+        this._connectionStatus.subscribe({
           onComplete: connection => {
             this._connection = connection;
           },
@@ -160,11 +160,11 @@ export default class Netifi {
         });
 
         setTimeout(
-          () => netifiClient.connect().subscribe(this._connecting),
+          () => netifiClient.connect().subscribe(this._connectionStatus),
           this.calculateRetryDuration(),
         );
 
-        return this._connecting;
+        return this._connectionStatus;
       }
     };
     this._requestHandler = requestHandler;
