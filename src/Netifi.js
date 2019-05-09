@@ -29,10 +29,18 @@ import {DeferredConnectingRSocket, UnwrappingRSocket} from './rsocket';
 import {FrameTypes, encodeFrame} from './frames';
 import type {Tags} from './frames';
 
-import RSocketWebSocketClient from 'rsocket-websocket-client/build/RSocketWebSocketClient';
+import RSocketWebSocketClient from 'rsocket-websocket-client';
 import ConnectionId from './frames/ConnectionId';
 import AdditionalFlags from './frames/AdditionalFlags';
 import uuid from 'uuid/v4';
+
+class ReconnectingRSocketWebSocketClient extends RSocketWebSocketClient {
+
+  _handleError = (e) => {
+    debugger;
+    console.log('OOPS');
+  }
+}
 
 export type NetifiConfig = {|
   serializers?: PayloadSerializers<Buffer, Buffer>,
@@ -270,7 +278,7 @@ export default class Netifi {
     const transport: DuplexConnection =
       config.transport.connection !== undefined
         ? config.transport.connection
-        : new RSocketWebSocketClient(
+        : new ReconnectingRSocketWebSocketClient(
             {
               url: config.transport.url ? config.transport.url : 'ws://',
               wsCreator: config.transport.wsCreator,
