@@ -234,12 +234,12 @@ export default class Netifi {
           };
         })();
 
-        this._connectionStatus.subscribe(this._rpcClientSubscriber);
+        // setTimeout(
+        //   () => this._client.connect().subscribe(this._rpcClientSubscriber),
+        //   this.calculateRetryDuration(),
+        // );
 
-        setTimeout(
-          () => this._client.connect().subscribe(this._connectionStatus),
-          this.calculateRetryDuration(),
-        );
+        this._client.connect().subscribe(this._rpcClientSubscriber);
 
         return this._connectionStatus;
       }
@@ -255,7 +255,7 @@ export default class Netifi {
           this._connection && this._connection.close();
           this._connection = null;
           this._buildClient(); // rebuilds this._client
-          this._client.connect().subscribe(this._connectionStatus);
+          this._client.connect().subscribe(this._rpcClientSubscriber);
         }
         else {
           // we have received a socket
