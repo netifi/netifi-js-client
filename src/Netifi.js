@@ -18,11 +18,11 @@
 
 ('use-strict');
 
-import {DuplexConnection, Responder, ReactiveSocket} from 'rsocket-types';
+import {DuplexConnection, Responder, ReactiveSocket, ISubscription} from 'rsocket-types';
 import {Single} from 'rsocket-flowable';
 import type {PayloadSerializers} from 'rsocket-core/build/RSocketSerialization';
 import {BufferEncoders} from 'rsocket-core';
-import {RpcClient, RequestHandlingRSocket} from 'rsocket-rpc-core';
+import {/*RpcClient,*/ RequestHandlingRSocket} from 'rsocket-rpc-core';
 import type {ClientConfig} from 'rsocket-rpc-core';
 import invariant from 'fbjs/lib/invariant';
 import {DeferredConnectingRSocket, UnwrappingRSocket} from './rsocket';
@@ -33,6 +33,9 @@ import RSocketWebSocketClient from 'rsocket-websocket-client';
 import ConnectionId from './frames/ConnectionId';
 import AdditionalFlags from './frames/AdditionalFlags';
 import uuid from 'uuid/v4';
+
+import TransparentRpcClient from './rsocket/TransparentRpcClient';
+import type {ReactiveSocketOrError} from './rsocket/TransparentRpcClient';
 
 export type NetifiConfig = {|
   serializers?: PayloadSerializers<Buffer, Buffer>,
@@ -59,25 +62,122 @@ export type NetifiConfig = {|
 |};
 
 export default class Netifi {
-  _client: RpcClient<Buffer, Buffer>;
+  _client: TransparentRpcClient<Buffer, Buffer>;
   _group: string;
   _tags: Tags;
+  _config: NetifiConfig;
+  _buildClient: () => TransparentRpcClient<Buffer, Buffer>;
   _connect: () => Single<ReactiveSocket<Buffer, Buffer>>;
+  _rpcClientSubscriber: Object;
+  _rpcClientSubscription: ISubscription;
   _connectionStatus: Object;
-  _connection: ReactiveSocket<Buffer, Buffer>;
+  _connection: ?ReactiveSocket<Buffer, Buffer>;
   _requestHandler: RequestHandlingRSocket;
   _lastConnectionAttemptTs: number;
   _attempts: number;
 
+  _keepAlive: number;
+  _lifetime: number;
+  _accessKey: number;
+  _accessToken: Buffer;
+  _connectionId: ConnectionId;
+  _additionalFlags: AdditionalFlags;
+  _subscribers: Array<any>;
+
   constructor(
     group: string,
-    tags: Tags,
-    netifiClient: RpcClient<Buffer, Buffer>,
+    config: NetifiConfig,
     requestHandler: RequestHandlingRSocket,
   ) {
-    this._client = netifiClient;
     this._group = group;
-    this._tags = tags;
+    this._config = config;
+    this._subscribers = [];
+
+    const destination =
+        config.setup.destination !== undefined
+          ? config.setup.destination
+          : uuid();
+    
+    this._tags = config.setup.tags !== undefined
+      ? {'com.netifi.destination': destination, ...config.setup.tags}
+      : {'com.netifi.destination': destination};
+
+    this._keepAlive = config.setup.keepAlive !== undefined
+      ? config.setup.keepAlive
+      : 60000; /* 60s in ms */
+
+    this._lifetime =
+      config.setup.lifetime !== undefined
+        ? config.setup.lifetime
+        : 360000; /* 360s in ms */
+
+    this._accessKey = config.setup.accessKey;
+
+    this._accessToken = Buffer.from(config.setup.accessToken, 'base64');
+
+    const connectionIdSeed =
+      typeof config.setup.connectionId !== 'undefined'
+        ? config.setup.connectionId
+        : Date.now().toString();
+
+    this._connectionId = new ConnectionId(connectionIdSeed);
+    
+    const additionalFlagsLiteral = {
+      public: false,
+      ...config.setup.additionalFlags,
+    };
+    
+    this._additionalFlags = new AdditionalFlags(additionalFlagsLiteral);
+
+    this._buildClient = () => {
+      const metadata = encodeFrame({
+        type: FrameTypes.DESTINATION_SETUP,
+        majorVersion: null,
+        minorVersion: null,
+        group: this._config.setup.group,
+        tags: this._tags,
+        accessKey: this._accessKey,
+        accessToken: this._accessToken,
+        connectionId: this._connectionId,
+        additionalFlags: this._additionalFlags,
+      });
+
+      const transport: DuplexConnection =
+        this._config.transport.connection !== undefined
+          ? this._config.transport.connection
+          : new RSocketWebSocketClient(
+              {
+                url: this._config.transport.url ? this._config.transport.url : 'ws://',
+                wsCreator: this._config.transport.wsCreator,
+              },
+              BufferEncoders,
+            );
+      
+      const responder = new UnwrappingRSocket(requestHandler);
+
+      const finalConfig: ClientConfig<Buffer, Buffer> = {
+        setup: {
+          keepAlive: this._keepAlive,
+          lifetime: this._lifetime,
+          metadata,
+          connectionId: this._connectionId,
+          additionalFlags: this._additionalFlags,
+        },
+        transport,
+        responder,
+      };
+  
+      if (this._config.responder !== undefined) {
+        finalConfig.responder = config.responder;
+      }
+  
+      if (this._config.serializers !== undefined) {
+        finalConfig.serializers = config.serializers;
+      }
+  
+      this._client = new TransparentRpcClient(finalConfig);
+    };
+
     this._connect = () => {
       if (this._connection) {
         return Single.of(this._connection);
@@ -86,30 +186,26 @@ export default class Netifi {
           this._connectionStatus.subscribe(subscriber);
         });
       } else {
+
+        this._buildClient();
+
+        const subscribers = this._subscribers;
+
         /** * This is a useful Publisher implementation that wraps could feasibly wrap the Single type ** */
         /** * Might be useful to clean up and contribute back or put in a utility or something ** */
         this._connectionStatus = (function() {
-          const _subscribers = [];
-          let _connection: ReactiveSocket<Buffer, Buffer>;
-          let _error: Error;
-          let _completed = false;
+
           return {
             onComplete: connection => {
-              // Memoize for future subscribers
-              _completed = true;
-              _connection = connection;
-
-              _subscribers.map(subscriber => {
+              subscribers.map(subscriber => {
                 if (subscriber.onComplete) {
-                  subscriber.onComplete(connection);
+                  subscriber.onComplete(this._connection);
                 }
               });
             },
 
             onError: error => {
-              _completed = true;
-              _error = error;
-              _subscribers.map(subscriber => {
+              subscribers.map(subscriber => {
                 if (subscriber.onError) {
                   subscriber.onError(error);
                 }
@@ -117,7 +213,7 @@ export default class Netifi {
             },
 
             onSubscribe: cancel => {
-              _subscribers.map(subscriber => {
+              subscribers.map(subscriber => {
                 if (subscriber.onSubscribe) {
                   subscriber.onSubscribe(cancel);
                 }
@@ -125,49 +221,56 @@ export default class Netifi {
             },
 
             subscribe: subscriber => {
-              if (_completed) {
-                subscriber.onSubscribe();
-                subscriber.onComplete(_connection);
-              } else if (_error) {
-                subscriber.onSubscribe();
-                subscriber.onError(_error);
-              } else {
-                _subscribers.push(subscriber);
-                if (subscriber.onSubscribe) {
-                  subscriber.onSubscribe(() => {
-                    const idx = _subscribers.indexOf(subscriber);
-                    if (idx > -1) {
-                      _subscribers.splice(idx, 1);
-                    }
-                  });
-                }
+              subscribers.push(subscriber);
+              if (subscriber.onSubscribe) {
+                subscriber.onSubscribe(() => {
+                  const idx = subscribers.indexOf(subscriber);
+                  if (idx > -1) {
+                    subscribers.splice(idx, 1);
+                  }
+                });
               }
             },
           };
         })();
 
-        this._connectionStatus.subscribe({
-          onComplete: connection => {
-            this._connection = connection;
-          },
-          onError: err => {
-            console.warn('An error has occurred while connecting:');
-            console.warn(err);
-          },
-          onSubscribe: cancel => {
-            // do nothing
-          },
-        });
+        this._connectionStatus.subscribe(this._rpcClientSubscriber);
 
         setTimeout(
-          () => netifiClient.connect().subscribe(this._connectionStatus),
+          () => this._client.connect().subscribe(this._connectionStatus),
           this.calculateRetryDuration(),
         );
 
         return this._connectionStatus;
       }
     };
+
     this._requestHandler = requestHandler;
+
+    this._rpcClientSubscriber = {
+      onNext: (reactiveSocketOrError: ReactiveSocketOrError<Buffer, Buffer>) => {
+        if (reactiveSocketOrError.error) {
+          this._rpcClientSubscription.cancel();
+          this._client.close();
+          this._connection && this._connection.close();
+          this._connection = null;
+          this._buildClient(); // rebuilds this._client
+          this._client.connect().subscribe(this._connectionStatus);
+        }
+        else {
+          // we have received a socket
+          this._connection = reactiveSocketOrError.reactiveSocket;
+        }
+      },
+      onError: err => {
+        console.warn('An error has occurred while connecting:');
+        console.warn(err);
+      },
+      onSubscribe: subscription => {
+        this._rpcClientSubscription = subscription;
+        subscription.request(Number.MAX_SAFE_INTEGER);
+      },
+    };
   }
 
   myGroup(): string {
@@ -236,85 +339,8 @@ export default class Netifi {
       'Netifi: Transport config must supply a connection or a URL',
     );
 
-    // default to GUID-y destination ID
-    const destination =
-      config.setup.destination !== undefined
-        ? config.setup.destination
-        : uuid();
-    const tags =
-      config.setup.tags !== undefined
-        ? {'com.netifi.destination': destination, ...config.setup.tags}
-        : {'com.netifi.destination': destination};
-    const keepAlive =
-      config.setup.keepAlive !== undefined
-        ? config.setup.keepAlive
-        : 60000; /* 60s in ms */
-    const lifetime =
-      config.setup.lifetime !== undefined
-        ? config.setup.lifetime
-        : 360000; /* 360s in ms */
-    const accessKey = config.setup.accessKey;
-    const accessToken = Buffer.from(config.setup.accessToken, 'base64');
-    /* If a connectionId is not provided, seed it */
-    const connectionIdSeed =
-      typeof config.setup.connectionId !== 'undefined'
-        ? config.setup.connectionId
-        : Date.now().toString();
-    const connectionId = new ConnectionId(connectionIdSeed);
-    const additionalFlagsLiteral = {
-      public: false,
-      ...config.setup.additionalFlags,
-    };
-    const additionalFlags = new AdditionalFlags(additionalFlagsLiteral);
-
-    const transport: DuplexConnection =
-      config.transport.connection !== undefined
-        ? config.transport.connection
-        : new RSocketWebSocketClient(
-            {
-              url: config.transport.url ? config.transport.url : 'ws://',
-              wsCreator: config.transport.wsCreator,
-            },
-            BufferEncoders,
-          );
-
     const requestHandler = new RequestHandlingRSocket();
-    const responder = new UnwrappingRSocket(requestHandler);
 
-    const metadata = encodeFrame({
-      type: FrameTypes.DESTINATION_SETUP,
-      majorVersion: null,
-      minorVersion: null,
-      group: config.setup.group,
-      tags,
-      accessKey,
-      accessToken,
-      connectionId,
-      additionalFlags,
-    });
-
-    const finalConfig: ClientConfig<Buffer, Buffer> = {
-      setup: {
-        keepAlive,
-        lifetime,
-        metadata,
-        connectionId,
-        additionalFlags,
-      },
-      transport,
-      responder,
-    };
-
-    if (config.responder !== undefined) {
-      finalConfig.responder = config.responder;
-    }
-
-    if (config.serializers !== undefined) {
-      finalConfig.serializers = config.serializers;
-    }
-
-    const client = new RpcClient(finalConfig);
-
-    return new Netifi(config.setup.group, tags, client, requestHandler);
+    return new Netifi(config.setup.group, config, requestHandler);
   }
 }
