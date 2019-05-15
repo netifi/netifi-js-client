@@ -62,28 +62,30 @@ export type NetifiConfig = {|
 |};
 
 export default class Netifi {
-  _client: TransparentRpcClient<Buffer, Buffer>;
-  _group: string;
-  _tags: Tags;
-  _config: NetifiConfig;
-  // _buildClient: () => void;
-  // _connect: () => Single<ReactiveSocket<Buffer, Buffer>>;
-  _rpcClientSubscriber: Object;
-  _rpcClientSubscription: ISubscription;
-  _connectionStatus: Object;
-  _connection: ?ReactiveSocket<Buffer, Buffer>;
-  _requestHandler: RequestHandlingRSocket;
-  _lastConnectionAttemptTs: number;
-  _attempts: number;
-
-  _reconnecting: boolean;
-  _keepAlive: number;
-  _lifetime: number;
   _accessKey: number;
   _accessToken: Buffer;
-  _connectionId: ConnectionId;
   _additionalFlags: AdditionalFlags;
+  _attempts: number;
+  _client: TransparentRpcClient<Buffer, Buffer>;
+  _config: NetifiConfig;
+  _connection: ?ReactiveSocket<Buffer, Buffer>;
+  _connectionId: ConnectionId;
+  _connectionStatus: Object;
+  _group: string;
+  _keepAlive: number;
+  _lastConnectionAttemptTs: number;
+  _lifetime: number;
+  _reconnecting: boolean;
+  _requestHandler: RequestHandlingRSocket;
+  _rpcClientSubscriber: Object;
+  _rpcClientSubscription: ISubscription;
   _subscribers: Array<any>;
+  _tags: Tags;
+
+  // commented due to a flow/babel 7 bug:
+  // https://github.com/babel/babel/issues/8417
+  // _buildClient: () => void;
+  // _connect: () => Single<ReactiveSocket<Buffer, Buffer>>;
   // _retryConnection: () => void;
 
   constructor(
@@ -139,6 +141,7 @@ export default class Netifi {
 
     this._requestHandler = requestHandler;
 
+    // this._rpcClientSubscriber handles the stream of sockets from each TransparentRpcClient created
     this._rpcClientSubscriber = {
       onNext: (reactiveSocketOrError: ReactiveSocketOrError<Buffer, Buffer>) => {
         if (reactiveSocketOrError.error) {
@@ -170,6 +173,7 @@ export default class Netifi {
     };
   }
 
+  // this._buildClient creates a new transport and TransparentRpcClient
   _buildClient(): void {
     const metadata = encodeFrame({
       type: FrameTypes.DESTINATION_SETUP,
@@ -223,7 +227,7 @@ export default class Netifi {
         this._connectionStatus.subscribe(subscriber);
       });
     } else {
-      this._buildClient();
+      // create the connectionStatus Subject and kick off the first connection attempt
       const subscribers = this._subscribers;
       /** * This is a useful Publisher implementation that wraps could feasibly wrap the Single type ** */
       /** * Might be useful to clean up and contribute back or put in a utility or something ** */
@@ -271,6 +275,7 @@ export default class Netifi {
 
   _retryConnection(): void {
     if (this._reconnecting) {
+      // a timeout is already running
       return;
     }
     const retryDuration = this.calculateRetryDuration();
@@ -279,8 +284,8 @@ export default class Netifi {
       if (!this._reconnecting) {
         return; // connection was established
       }
-      console.error(`Connection error: reconnecting...`);
-      this._buildClient(); // rebuilds this._client
+      console.log(`Establishing connection...`);
+      this._buildClient();
       this._client.connect().subscribe(this._rpcClientSubscriber);
       this._reconnecting = false;
       this._retryConnection();
