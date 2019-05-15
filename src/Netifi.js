@@ -19,7 +19,7 @@
 ('use-strict');
 
 import {DuplexConnection, Responder, ReactiveSocket, ISubscription} from 'rsocket-types';
-import {Single} from 'rsocket-flowable';
+import {Single, Flowable} from 'rsocket-flowable';
 import type {PayloadSerializers} from 'rsocket-core/build/RSocketSerialization';
 import {BufferEncoders} from 'rsocket-core';
 import {RequestHandlingRSocket} from 'rsocket-rpc-core';
@@ -160,6 +160,13 @@ export default class Netifi {
           this._connection = reactiveSocketOrError.reactiveSocket;
           this._reconnecting = false;
           console.log('connected.');
+          this._subscribers = this._subscribers.filter(subscriber => {
+            if (subscriber.onComplete) {
+              subscriber.onComplete(this._connection);
+              return false;
+            }
+            return true;
+          });
         }
       },
       onError: err => {
@@ -170,6 +177,18 @@ export default class Netifi {
         this._rpcClientSubscription = subscription;
         subscription.request(Number.MAX_SAFE_INTEGER);
       },
+
+      subscribe: subscriber => {
+        this._subscribers.push(subscriber);
+        if (subscriber.onSubscribe) {
+          subscriber.onSubscribe(() => {
+            const idx = this._subscribers.indexOf(subscriber);
+            if (idx > -1) {
+              this._subscribers.splice(idx, 1);
+            }
+          });
+        }
+      }
     };
   }
 
@@ -222,54 +241,11 @@ export default class Netifi {
   _connect(): Single<ReactiveSocket<Buffer, Buffer>> {
     if (this._connection) {
       return Single.of(this._connection);
-    } else if (this._connectionStatus) {
-      return new Single(subscriber => {
-        this._connectionStatus.subscribe(subscriber);
-      });
     } else {
-      // create the connectionStatus Subject and kick off the first connection attempt
-      const subscribers = this._subscribers;
-      /** * This is a useful Publisher implementation that wraps could feasibly wrap the Single type ** */
-      /** * Might be useful to clean up and contribute back or put in a utility or something ** */
-      this._connectionStatus = {
-        onComplete: connection => {
-          subscribers.map(subscriber => {
-            if (subscriber.onComplete) {
-              subscriber.onComplete(this._connection);
-            }
-          });
-        },
-
-        onError: error => {
-          subscribers.map(subscriber => {
-            if (subscriber.onError) {
-              subscriber.onError(error);
-            }
-          });
-        },
-
-        onSubscribe: cancel => {
-          subscribers.map(subscriber => {
-            if (subscriber.onSubscribe) {
-              subscriber.onSubscribe(cancel);
-            }
-          });
-        },
-
-        subscribe: subscriber => {
-          subscribers.push(subscriber);
-          if (subscriber.onSubscribe) {
-            subscriber.onSubscribe(() => {
-              const idx = subscribers.indexOf(subscriber);
-              if (idx > -1) {
-                subscribers.splice(idx, 1);
-              }
-            });
-          }
-        },
-      };
       this._retryConnection();
-      return this._connectionStatus;
+      return new Single(subscriber => {
+        this._rpcClientSubscriber.subscribe(subscriber);
+      });
     }
   }
 

@@ -45,7 +45,7 @@ export type ReactiveSocketOrError<D, M> = {|
   error?: Error
 |};
 
-export default class FlowableRpcClient extends RpcClient {
+export default class FlowableRpcClient<D, M> extends RpcClient<D, M> {
   _connection: ?Flowable<ReactiveSocketOrError<D, M>>;
 
   connect(): Flowable<ReactiveSocketOrError<D, M>> {
