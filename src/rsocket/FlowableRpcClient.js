@@ -21,49 +21,32 @@
 import type {
   ConnectionStatus,
   DuplexConnection,
-  Encodable,
   Payload,
   ReactiveSocket,
   SetupFrame,
   Responder,
 } from 'rsocket-types';
-import type {PayloadSerializers} from 'rsocket-core/build/RSocketSerialization';
 
 import {Flowable, Single, every} from 'rsocket-flowable';
 import invariant from 'fbjs/lib/invariant';
+import {RpcClient} from 'rsocket-rpc-core';
 
 import {CONNECTION_STREAM_ID, FLAGS, FRAME_TYPES} from 'rsocket-core';
 import {MAJOR_VERSION, MINOR_VERSION} from 'rsocket-core/build/RSocketVersion';
 import {createClientMachine} from 'rsocket-core/build/RSocketMachine';
 
-export type ClientConfig<D, M> = {|
-  serializers?: PayloadSerializers<D, M>,
-  setup: {|
-    keepAlive: number,
-    lifetime: number,
-    metadata?: Encodable,
-  |},
-  transport: DuplexConnection,
-  responder?: Responder<D, M>,
-|};
+/**
+ * FlowableRpcClient returns a Flowable of status events on its connect() method
+ * This is in contrast to the RpcClient, which returns a Single and hides changes to the connection
+ */
 
 export type ReactiveSocketOrError<D, M> = {|
   reactiveSocket?: ReactiveSocket<D, M>,
   error?: Error
 |};
 
-export default class TransparentRpcClient<D, M> {
-  _config: ClientConfig<D, M>;
+export default class FlowableRpcClient extends RpcClient {
   _connection: ?Flowable<ReactiveSocketOrError<D, M>>;
-
-  constructor(config: ClientConfig<D, M>) {
-    this._config = config;
-    this._connection = null;
-  }
-
-  close(): void {
-    this._config.transport.close();
-  }
 
   connect(): Flowable<ReactiveSocketOrError<D, M>> {
     invariant(
@@ -90,9 +73,6 @@ export default class TransparentRpcClient<D, M> {
           subscriber.onSubscribe(_subscription);
           subscription = _subscription;
           subscription.request(Number.MAX_SAFE_INTEGER);
-        },
-        onComplete: () => {
-          console.log('complete');
         }
       });
       transport.connect();
@@ -104,6 +84,8 @@ export default class TransparentRpcClient<D, M> {
 /**
  * @private
  */
+
+// Copied from RpcClient since it's not an export
 class RpcSocket<D, M> implements ReactiveSocket<D, M> {
   _machine: ReactiveSocket<D, M>;
 

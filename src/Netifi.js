@@ -34,8 +34,8 @@ import ConnectionId from './frames/ConnectionId';
 import AdditionalFlags from './frames/AdditionalFlags';
 import uuid from 'uuid/v4';
 
-import TransparentRpcClient from './rsocket/TransparentRpcClient';
-import type {ReactiveSocketOrError} from './rsocket/TransparentRpcClient';
+import FlowableRpcClient from './rsocket/FlowableRpcClient';
+import type {ReactiveSocketOrError} from './rsocket/FlowableRpcClient';
 
 export type NetifiConfig = {|
   serializers?: PayloadSerializers<Buffer, Buffer>,
@@ -66,7 +66,7 @@ export default class Netifi {
   _accessToken: Buffer;
   _additionalFlags: AdditionalFlags;
   _attempts: number;
-  _client: TransparentRpcClient<Buffer, Buffer>;
+  _client: FlowableRpcClient<Buffer, Buffer>;
   _config: NetifiConfig;
   _connection: ?ReactiveSocket<Buffer, Buffer>;
   _connectionId: ConnectionId;
@@ -141,7 +141,7 @@ export default class Netifi {
 
     this._requestHandler = requestHandler;
 
-    // this._rpcClientSubscriber handles the stream of sockets from each TransparentRpcClient created
+    // this._rpcClientSubscriber handles the stream of sockets from each FlowableRpcClient created
     this._rpcClientSubscriber = {
       onNext: (reactiveSocketOrError: ReactiveSocketOrError<Buffer, Buffer>) => {
         if (reactiveSocketOrError.error) {
@@ -173,7 +173,7 @@ export default class Netifi {
     };
   }
 
-  // this._buildClient creates a new transport and TransparentRpcClient
+  // this._buildClient creates a new transport and FlowableRpcClient
   _buildClient(): void {
     const metadata = encodeFrame({
       type: FrameTypes.DESTINATION_SETUP,
@@ -216,7 +216,7 @@ export default class Netifi {
       finalConfig.serializers = this._config.serializers;
     }
 
-    this._client = new TransparentRpcClient(finalConfig);
+    this._client = new FlowableRpcClient(finalConfig);
   }
 
   _connect(): Single<ReactiveSocket<Buffer, Buffer>> {
