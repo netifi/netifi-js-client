@@ -25,7 +25,7 @@ const YELLOW = '\x1b[33m';
 const options = [
   '--no-bracket-spacing',
   '--single-quote',
-  '--trailing-comma=all'
+  '--trailing-comma=all',
 ];
 const glob = '{resources,src}/**/!(*_pb).js';
 const root = join(__dirname, '..');

@@ -18,11 +18,11 @@
 
 ('use-strict');
 
-import {DuplexConnection, Responder, ReactiveSocket} from 'rsocket-types';
-import {Single} from 'rsocket-flowable';
+import {DuplexConnection, Responder, ReactiveSocket, ISubscription} from 'rsocket-types';
+import {Single, Flowable} from 'rsocket-flowable';
 import type {PayloadSerializers} from 'rsocket-core/build/RSocketSerialization';
 import {BufferEncoders} from 'rsocket-core';
-import {RpcClient, RequestHandlingRSocket} from 'rsocket-rpc-core';
+import {RequestHandlingRSocket} from 'rsocket-rpc-core';
 import type {ClientConfig} from 'rsocket-rpc-core';
 import invariant from 'fbjs/lib/invariant';
 import {DeferredConnectingRSocket, UnwrappingRSocket} from './rsocket';
@@ -33,6 +33,9 @@ import RSocketWebSocketClient from 'rsocket-websocket-client';
 import ConnectionId from './frames/ConnectionId';
 import AdditionalFlags from './frames/AdditionalFlags';
 import uuid from 'uuid/v4';
+
+import FlowableRpcClient from './rsocket/FlowableRpcClient';
+import type {ReactiveSocketOrError} from './rsocket/FlowableRpcClient';
 
 export type NetifiConfig = {|
   serializers?: PayloadSerializers<Buffer, Buffer>,
@@ -59,115 +62,210 @@ export type NetifiConfig = {|
 |};
 
 export default class Netifi {
-  _client: RpcClient<Buffer, Buffer>;
-  _group: string;
-  _tags: Tags;
-  _connect: () => Single<ReactiveSocket<Buffer, Buffer>>;
-  _connecting: Object;
-  _connection: ReactiveSocket<Buffer, Buffer>;
-  _requestHandler: RequestHandlingRSocket;
-  _lastConnectionAttemptTs: number;
+  _accessKey: number;
+  _accessToken: Buffer;
+  _additionalFlags: AdditionalFlags;
   _attempts: number;
+  _client: FlowableRpcClient<Buffer, Buffer>;
+  _config: NetifiConfig;
+  _connection: ?ReactiveSocket<Buffer, Buffer>;
+  _connectionId: ConnectionId;
+  _connectionStatus: Object;
+  _group: string;
+  _keepAlive: number;
+  _lastConnectionAttemptTs: number;
+  _lifetime: number;
+  _reconnecting: boolean;
+  _requestHandler: RequestHandlingRSocket;
+  _rpcClientSubscriber: Object;
+  _rpcClientSubscription: ISubscription;
+  _subscribers: Array<any>;
+  _tags: Tags;
+
+  // commented due to a flow/babel 7 bug:
+  // https://github.com/babel/babel/issues/8417
+  // _buildClient: () => void;
+  // _connect: () => Single<ReactiveSocket<Buffer, Buffer>>;
+  // _retryConnection: () => void;
 
   constructor(
     group: string,
-    tags: Tags,
-    netifiClient: RpcClient<Buffer, Buffer>,
+    config: NetifiConfig,
     requestHandler: RequestHandlingRSocket,
   ) {
-    this._client = netifiClient;
     this._group = group;
-    this._tags = tags;
-    this._connect = () => {
-      if (this._connection) {
-        return Single.of(this._connection);
-      } else if (this._connecting) {
-        return new Single(subscriber => {
-          this._connecting.subscribe(subscriber);
-        });
-      } else {
-        /** * This is a useful Publisher implementation that wraps could feasibly wrap the Single type ** */
-        /** * Might be useful to clean up and contribute back or put in a utility or something ** */
-        this._connecting = (function() {
-          const _subscribers = [];
-          let _connection: ReactiveSocket<Buffer, Buffer>;
-          let _error: Error;
-          let _completed = false;
-          return {
-            onComplete: connection => {
-              // Memoize for future subscribers
-              _completed = true;
-              _connection = connection;
+    this._config = config;
+    this._subscribers = [];
+    this._attempts = 0;
+    this._reconnecting = false;
 
-              _subscribers.map(subscriber => {
-                if (subscriber.onComplete) {
-                  subscriber.onComplete(connection);
-                }
-              });
-            },
+    const destination =
+        config.setup.destination !== undefined
+          ? config.setup.destination
+          : uuid();
+    
+    this._tags = config.setup.tags !== undefined
+      ? {'com.netifi.destination': destination, ...config.setup.tags}
+      : {'com.netifi.destination': destination};
 
-            onError: error => {
-              _completed = true;
-              _error = error;
-              _subscribers.map(subscriber => {
-                if (subscriber.onError) {
-                  subscriber.onError(error);
-                }
-              });
-            },
+    this._keepAlive = config.setup.keepAlive !== undefined
+      ? config.setup.keepAlive
+      : 60000; /* 60s in ms */
 
-            onSubscribe: cancel => {
-              _subscribers.map(subscriber => {
-                if (subscriber.onSubscribe) {
-                  subscriber.onSubscribe(cancel);
-                }
-              });
-            },
+    this._lifetime =
+      config.setup.lifetime !== undefined
+        ? config.setup.lifetime
+        : 360000; /* 360s in ms */
 
-            subscribe: subscriber => {
-              if (_completed) {
-                subscriber.onSubscribe();
-                subscriber.onComplete(_connection);
-              } else if (_error) {
-                subscriber.onSubscribe();
-                subscriber.onError(_error);
-              } else {
-                _subscribers.push(subscriber);
-                if (subscriber.onSubscribe) {
-                  subscriber.onSubscribe(() => {
-                    const idx = _subscribers.indexOf(subscriber);
-                    if (idx > -1) {
-                      _subscribers.splice(idx, 1);
-                    }
-                  });
-                }
-              }
-            },
-          };
-        })();
+    this._accessKey = config.setup.accessKey;
 
-        this._connecting.subscribe({
-          onComplete: connection => {
-            this._connection = connection;
-          },
-          onError: err => {
-            console.warn('An error has occurred while connecting:');
-            console.warn(err);
-          },
-          onSubscribe: cancel => {
-            // do nothing
-          },
-        });
+    this._accessToken = Buffer.from(config.setup.accessToken, 'base64');
 
-        setTimeout(
-          () => netifiClient.connect().subscribe(this._connecting),
-          this.calculateRetryDuration(),
-        );
+    const connectionIdSeed =
+      typeof config.setup.connectionId !== 'undefined'
+        ? config.setup.connectionId
+        : Date.now().toString();
 
-        return this._connecting;
+    this._connectionId = new ConnectionId(connectionIdSeed);
+    
+    const additionalFlagsLiteral = {
+      public: false,
+      ...config.setup.additionalFlags,
+    };
+    
+    this._additionalFlags = new AdditionalFlags(additionalFlagsLiteral);
+
+    this._retryConnection = this._retryConnection.bind(this);
+    this._buildClient = this._buildClient.bind(this);
+    this._connect = this._connect.bind(this);
+
+    this._requestHandler = requestHandler;
+
+    // this._rpcClientSubscriber handles the stream of sockets from each FlowableRpcClient created
+    this._rpcClientSubscriber = {
+      onNext: (reactiveSocketOrError: ReactiveSocketOrError<Buffer, Buffer>) => {
+        if (reactiveSocketOrError.error) {
+          if (!this._connection) {
+            // already trying to reconnect
+            return;
+          }
+          this._rpcClientSubscription.cancel();
+          this._client.close();
+          this._connection && this._connection.close();
+          this._connection = null;
+          this._retryConnection();
+        }
+        else {
+          // we have received a socket
+          this._connection = reactiveSocketOrError.reactiveSocket;
+          this._reconnecting = false;
+          console.log('connected.');
+          this._subscribers = this._subscribers.filter(subscriber => {
+            if (subscriber.onComplete) {
+              subscriber.onComplete(this._connection);
+              return false;
+            }
+            return true;
+          });
+        }
+      },
+      onError: err => {
+        console.warn('An error has occurred while connecting:');
+        console.warn(err);
+      },
+      onSubscribe: subscription => {
+        this._rpcClientSubscription = subscription;
+        subscription.request(Number.MAX_SAFE_INTEGER);
+      },
+
+      subscribe: subscriber => {
+        this._subscribers.push(subscriber);
+        if (subscriber.onSubscribe) {
+          subscriber.onSubscribe(() => {
+            const idx = this._subscribers.indexOf(subscriber);
+            if (idx > -1) {
+              this._subscribers.splice(idx, 1);
+            }
+          });
+        }
       }
     };
-    this._requestHandler = requestHandler;
+  }
+
+  // this._buildClient creates a new transport and FlowableRpcClient
+  _buildClient(): void {
+    const metadata = encodeFrame({
+      type: FrameTypes.DESTINATION_SETUP,
+      majorVersion: null,
+      minorVersion: null,
+      group: this._config.setup.group,
+      tags: this._tags,
+      accessKey: this._accessKey,
+      accessToken: this._accessToken,
+      connectionId: this._connectionId,
+      additionalFlags: this._additionalFlags,
+    });
+
+    const transport: DuplexConnection =
+      this._config.transport.connection !== undefined
+        ? this._config.transport.connection
+        : new RSocketWebSocketClient(
+            {
+              url: this._config.transport.url ? this._config.transport.url : 'ws://',
+              wsCreator: this._config.transport.wsCreator,
+            },
+            BufferEncoders,
+          );
+
+    const responder = this._config.responder || new UnwrappingRSocket(this._requestHandler);
+
+    const finalConfig: ClientConfig<Buffer, Buffer> = {
+      setup: {
+        keepAlive: this._keepAlive,
+        lifetime: this._lifetime,
+        metadata,
+        connectionId: this._connectionId,
+        additionalFlags: this._additionalFlags,
+      },
+      transport,
+      responder,
+    };
+
+    if (this._config.serializers !== undefined) {
+      finalConfig.serializers = this._config.serializers;
+    }
+
+    this._client = new FlowableRpcClient(finalConfig);
+  }
+
+  _connect(): Single<ReactiveSocket<Buffer, Buffer>> {
+    if (this._connection) {
+      return Single.of(this._connection);
+    } else {
+      this._retryConnection();
+      return new Single(subscriber => {
+        this._rpcClientSubscriber.subscribe(subscriber);
+      });
+    }
+  }
+
+  _retryConnection(): void {
+    if (this._reconnecting) {
+      // a timeout is already running
+      return;
+    }
+    const retryDuration = this.calculateRetryDuration();
+    this._reconnecting = true;
+    setTimeout(() => {
+      if (!this._reconnecting) {
+        return; // connection was established
+      }
+      console.log(`Establishing connection...`);
+      this._buildClient();
+      this._client.connect().subscribe(this._rpcClientSubscriber);
+      this._reconnecting = false;
+      this._retryConnection();
+    }, retryDuration);
   }
 
   myGroup(): string {
@@ -215,9 +313,7 @@ export default class Netifi {
     }
 
     this._lastConnectionAttemptTs = currentTs;
-
     this._attempts++;
-
     return calculatedDuration * 1000;
   }
 
@@ -236,85 +332,8 @@ export default class Netifi {
       'Netifi: Transport config must supply a connection or a URL',
     );
 
-    // default to GUID-y destination ID
-    const destination =
-      config.setup.destination !== undefined
-        ? config.setup.destination
-        : uuid();
-    const tags =
-      config.setup.tags !== undefined
-        ? {'com.netifi.destination': destination, ...config.setup.tags}
-        : {'com.netifi.destination': destination};
-    const keepAlive =
-      config.setup.keepAlive !== undefined
-        ? config.setup.keepAlive
-        : 60000; /* 60s in ms */
-    const lifetime =
-      config.setup.lifetime !== undefined
-        ? config.setup.lifetime
-        : 360000; /* 360s in ms */
-    const accessKey = config.setup.accessKey;
-    const accessToken = Buffer.from(config.setup.accessToken, 'base64');
-    /* If a connectionId is not provided, seed it */
-    const connectionIdSeed =
-      typeof config.setup.connectionId !== 'undefined'
-        ? config.setup.connectionId
-        : Date.now().toString();
-    const connectionId = new ConnectionId(connectionIdSeed);
-    const additionalFlagsLiteral = {
-      public: false,
-      ...config.setup.additionalFlags,
-    };
-    const additionalFlags = new AdditionalFlags(additionalFlagsLiteral);
-
-    const transport: DuplexConnection =
-      config.transport.connection !== undefined
-        ? config.transport.connection
-        : new RSocketWebSocketClient(
-            {
-              url: config.transport.url ? config.transport.url : 'ws://',
-              wsCreator: config.transport.wsCreator,
-            },
-            BufferEncoders,
-          );
-
     const requestHandler = new RequestHandlingRSocket();
-    const responder = new UnwrappingRSocket(requestHandler);
 
-    const metadata = encodeFrame({
-      type: FrameTypes.DESTINATION_SETUP,
-      majorVersion: null,
-      minorVersion: null,
-      group: config.setup.group,
-      tags,
-      accessKey,
-      accessToken,
-      connectionId,
-      additionalFlags,
-    });
-
-    const finalConfig: ClientConfig<Buffer, Buffer> = {
-      setup: {
-        keepAlive,
-        lifetime,
-        metadata,
-        connectionId,
-        additionalFlags,
-      },
-      transport,
-      responder,
-    };
-
-    if (config.responder !== undefined) {
-      finalConfig.responder = config.responder;
-    }
-
-    if (config.serializers !== undefined) {
-      finalConfig.serializers = config.serializers;
-    }
-
-    const client = new RpcClient(finalConfig);
-
-    return new Netifi(config.setup.group, tags, client, requestHandler);
+    return new Netifi(config.setup.group, config, requestHandler);
   }
 }
