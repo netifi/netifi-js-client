@@ -19,43 +19,6 @@
 'use strict';
 
 import Netifi from './Netifi';
-
-import {
-  AccessKey,
-  AccessKeyParameters,
-  AccessToken,
-  AccessTokenInfo,
-} from './netifi/accesskey_info_pb';
-
-import {
-  Broker,
-  Group,
-  Destination,
-  Event,
-  Cluster,
-  Id,
-  Tag,
-} from './netifi/broker_info_pb';
-
-import {Brokers, Connection} from './netifi/broker_mgmt_pb';
-
-import {
-  AccessKeyInfoServiceClient,
-  AccessKeyInfoServiceServer,
-} from './netifi/accesskey_info_rsocket_pb';
-import {
-  BrokerInfoServiceClient,
-  BrokerInfoServiceServer,
-} from './netifi/broker_info_rsocket_pb';
-import {
-  BrokerManagementServiceClient,
-  BrokerManagementServiceServer,
-} from './netifi/broker_mgmt_rsocket_pb';
-import {
-  ClusterManagementServiceClient,
-  ClusterManagementServiceServer,
-} from './netifi/cluster_mgmt_rsocket_pb';
-
 import toObservable from './rx/FlowableAdapter';
 
 /**
@@ -63,28 +26,4 @@ import toObservable from './rx/FlowableAdapter';
  */
 export type {NetifiConfig} from './Netifi';
 
-export {
-  AccessKey,
-  AccessKeyInfoServiceClient,
-  AccessKeyInfoServiceServer,
-  AccessKeyParameters,
-  AccessToken,
-  AccessTokenInfo,
-  Broker,
-  BrokerInfoServiceClient,
-  BrokerInfoServiceServer,
-  BrokerManagementServiceClient,
-  BrokerManagementServiceServer,
-  Brokers,
-  Cluster,
-  ClusterManagementServiceClient,
-  ClusterManagementServiceServer,
-  Connection,
-  Destination,
-  Event,
-  Group,
-  Id,
-  Netifi,
-  Tag,
-  toObservable,
-};
+export {Netifi, toObservable};

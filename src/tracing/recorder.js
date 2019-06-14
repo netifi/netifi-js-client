@@ -1,6 +1,6 @@
-import {Span, Endpoint, Annotation} from '../zipkin/proto3/zipkin_pb';
+import {Span, Endpoint, Annotation} from '../proto/zipkin/proto3/zipkin_pb';
 import Long from 'long';
-import {NetifiTracingServiceClient} from '../netifi/testing/tracing_rsocket_pb';
+import {NetifiTracingServiceClient} from '../proto/netifi/testing/tracing_rsocket_pb';
 import {QueuingFlowableProcessor} from 'rsocket-rpc-core';
 import {ISubscription} from 'rsocket-types';
 

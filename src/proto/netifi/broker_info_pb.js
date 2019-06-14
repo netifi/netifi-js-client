@@ -658,7 +658,8 @@ proto.com.netifi.broker.info.Destination.toObject = function(includeInstance, ms
     ipaddress: msg.getIpaddress_asB64(),
     tagsList: jspb.Message.toObjectList(msg.getTagsList(),
     proto.com.netifi.broker.info.Tag.toObject, includeInstance),
-    accesskey: jspb.Message.getFieldWithDefault(msg, 6, 0)
+    accesskey: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    pb_public: jspb.Message.getFieldWithDefault(msg, 7, false)
   };
 
   if (includeInstance) {
@@ -721,6 +722,10 @@ proto.com.netifi.broker.info.Destination.deserializeBinaryFromReader = function(
     case 6:
       var value = /** @type {number} */ (reader.readInt64());
       msg.setAccesskey(value);
+      break;
+    case 7:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setPublic(value);
       break;
     default:
       reader.skipField();
@@ -793,6 +798,13 @@ proto.com.netifi.broker.info.Destination.serializeBinaryToWriter = function(mess
   if (f !== 0) {
     writer.writeInt64(
       6,
+      f
+    );
+  }
+  f = message.getPublic();
+  if (f) {
+    writer.writeBool(
+      7,
       f
     );
   }
@@ -956,6 +968,23 @@ proto.com.netifi.broker.info.Destination.prototype.getAccesskey = function() {
 /** @param {number} value */
 proto.com.netifi.broker.info.Destination.prototype.setAccesskey = function(value) {
   jspb.Message.setProto3IntField(this, 6, value);
+};
+
+
+/**
+ * optional bool public = 7;
+ * Note that Boolean fields may be set to 0/1 when serialized from a Java server.
+ * You should avoid comparisons like {@code val === true/false} in those cases.
+ * @return {boolean}
+ */
+proto.com.netifi.broker.info.Destination.prototype.getPublic = function() {
+  return /** @type {boolean} */ (jspb.Message.getFieldWithDefault(this, 7, false));
+};
+
+
+/** @param {boolean} value */
+proto.com.netifi.broker.info.Destination.prototype.setPublic = function(value) {
+  jspb.Message.setProto3BooleanField(this, 7, value);
 };
 
 

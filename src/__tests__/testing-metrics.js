@@ -1,7 +1,11 @@
-const {Annotation, Endpoint, Span} = require('../zipkin/proto3/zipkin_pb');
+const {
+  Annotation,
+  Endpoint,
+  Span,
+} = require('../proto/zipkin/proto3/zipkin_pb');
 const {
   NetifiTracingServiceClient,
-} = require('../../dist/netifi/testing/tracing_rsocket_pb');
+} = require('../proto/netifi/testing/tracing_rsocket_pb');
 
 const {
   MetricsExporter,
@@ -9,16 +13,15 @@ const {
   MetricsSnapshotHandlerClient,
   MetricsSnapshotHandlerServer,
 } = require('rsocket-rpc-metrics');
-const SimpleMetricsService = require('../../dist/metrics/SimpleMetricsService')
-  .default;
+const SimpleMetricsService = require('./SimpleMetricsService').default;
 
 const Long = require('long');
-const {ZipkinTracingService} = require('../../dist/tracing/tracingService');
-const {BasicTracer} = require('../../dist/tracing/tracer');
+const {ZipkinTracingService} = require('../tracing/tracingService');
+const {BasicTracer} = require('../tracing/tracer');
 const {
   NetifiTracingServiceServer,
-} = require('../../dist/netifi/testing/tracing_rsocket_pb');
-const Netifi = require('../../../client/dist/Netifi').default;
+} = require('../proto/netifi/testing/tracing_rsocket_pb');
+const {Netifi} = require('../index');
 const {BufferEncoders} = require('rsocket-core');
 const {Flowable, Single} = require('rsocket-flowable');
 const RSocketTcpClient = require('rsocket-tcp-client').default;

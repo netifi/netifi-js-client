@@ -42,7 +42,7 @@ import {createClientMachine} from 'rsocket-core/build/RSocketMachine';
 
 export type ReactiveSocketOrError<D, M> = {|
   reactiveSocket?: ReactiveSocket<D, M>,
-  error?: Error
+  error?: Error,
 |};
 
 export default class FlowableRpcClient<D, M> extends RpcClient<D, M> {
@@ -60,20 +60,24 @@ export default class FlowableRpcClient<D, M> extends RpcClient<D, M> {
         onNext: status => {
           if (status.kind === 'CONNECTED') {
             // subscription && subscription.cancel();
-            subscriber.onNext({reactiveSocket: new RpcSocket(this._config, transport)});
+            subscriber.onNext({
+              reactiveSocket: new RpcSocket(this._config, transport),
+            });
           } else if (status.kind === 'ERROR') {
             // subscription && subscription.cancel();
             subscriber.onNext({error: status.error});
           } else if (status.kind === 'CLOSED') {
             // subscription && subscription.cancel();
-            subscriber.onNext({error: new Error('RpcClient: Connection closed.')});
+            subscriber.onNext({
+              error: new Error('RpcClient: Connection closed.'),
+            });
           }
         },
         onSubscribe: _subscription => {
           subscriber.onSubscribe(_subscription);
           subscription = _subscription;
           subscription.request(Number.MAX_SAFE_INTEGER);
-        }
+        },
       });
       transport.connect();
     });
