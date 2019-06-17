@@ -2,7 +2,7 @@
 
 // Original file comments:
 //
-//    Copyright 2019 Netifi Inc.
+//    Copyright 2019 The Netifi Authors
 //
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
@@ -33,6 +33,8 @@ var ClusterManagementServiceClient = function () {
     this.closeDestinationMetrics = rsocket_rpc_metrics.timed(meterRegistry, "ClusterManagementService", {"service": "com.netifi.broker.info.ClusterManagementService"}, {"method": "closeDestination"}, {"role": "client"});
     this.closeGroupTrace = rsocket_rpc_tracing.trace(tracer, "ClusterManagementService", {"rsocket.rpc.service": "com.netifi.broker.info.ClusterManagementService"}, {"method": "closeGroup"}, {"rsocket.rpc.role": "client"});
     this.closeGroupMetrics = rsocket_rpc_metrics.timed(meterRegistry, "ClusterManagementService", {"service": "com.netifi.broker.info.ClusterManagementService"}, {"method": "closeGroup"}, {"role": "client"});
+    this.setTagSelectorTrace = rsocket_rpc_tracing.traceSingle(tracer, "ClusterManagementService", {"rsocket.rpc.service": "com.netifi.broker.info.ClusterManagementService"}, {"method": "setTagSelector"}, {"rsocket.rpc.role": "client"});
+    this.setTagSelectorMetrics = rsocket_rpc_metrics.timedSingle(meterRegistry, "ClusterManagementService", {"service": "com.netifi.broker.info.ClusterManagementService"}, {"method": "setTagSelector"}, {"role": "client"});
   }
   // Closes connections to a specific set of destinations across broker cluster
   ClusterManagementServiceClient.prototype.closeDestination = function closeDestination(messages, metadata) {
@@ -82,6 +84,26 @@ var ClusterManagementServiceClient = function () {
       )
     );
   };
+  // Set tag selector, intended for the cluster
+  ClusterManagementServiceClient.prototype.setTagSelector = function setTagSelector(message, metadata) {
+    const map = {};
+    return this.setTagSelectorMetrics(
+      this.setTagSelectorTrace(map)(new rsocket_flowable.Single(subscriber => {
+        var dataBuf = Buffer.from(message.serializeBinary());
+        var tracingMetadata = rsocket_rpc_tracing.mapToBuffer(map);
+        var metadataBuf = rsocket_rpc_frames.encodeMetadata('com.netifi.broker.info.ClusterManagementService', 'setTagSelector', tracingMetadata, metadata || Buffer.alloc(0));
+          this._rs.requestResponse({
+            data: dataBuf,
+            metadata: metadataBuf
+          }).map(function (payload) {
+            //TODO: resolve either 'https://github.com/rsocket/rsocket-js/issues/19' or 'https://github.com/google/protobuf/issues/1319'
+            var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
+            return netifi_broker_mgmt_pb.Ack.deserializeBinary(binary);
+          }).subscribe(subscriber);
+        })
+      )
+    );
+  };
   return ClusterManagementServiceClient;
 }();
 
@@ -95,6 +117,8 @@ var ClusterManagementServiceServer = function () {
     this.closeDestinationMetrics = rsocket_rpc_metrics.timed(meterRegistry, "ClusterManagementService", {"service": "com.netifi.broker.info.ClusterManagementService"}, {"method": "closeDestination"}, {"role": "server"});
     this.closeGroupTrace = rsocket_rpc_tracing.traceAsChild(tracer, "ClusterManagementService", {"rsocket.rpc.service": "com.netifi.broker.info.ClusterManagementService"}, {"method": "closeGroup"}, {"rsocket.rpc.role": "server"});
     this.closeGroupMetrics = rsocket_rpc_metrics.timed(meterRegistry, "ClusterManagementService", {"service": "com.netifi.broker.info.ClusterManagementService"}, {"method": "closeGroup"}, {"role": "server"});
+    this.setTagSelectorTrace = rsocket_rpc_tracing.traceSingleAsChild(tracer, "ClusterManagementService", {"rsocket.rpc.service": "com.netifi.broker.info.ClusterManagementService"}, {"method": "setTagSelector"}, {"rsocket.rpc.role": "server"});
+    this.setTagSelectorMetrics = rsocket_rpc_metrics.timedSingle(meterRegistry, "ClusterManagementService", {"service": "com.netifi.broker.info.ClusterManagementService"}, {"method": "setTagSelector"}, {"role": "server"});
     this._channelSwitch = (payload, restOfMessages) => {
       if (payload.metadata == null) {
         return rsocket_flowable.Flowable.error(new Error('metadata is empty'));
@@ -146,7 +170,35 @@ var ClusterManagementServiceServer = function () {
     throw new Error('fireAndForget() is not implemented');
   };
   ClusterManagementServiceServer.prototype.requestResponse = function requestResponse(payload) {
-    return rsocket_flowable.Single.error(new Error('requestResponse() is not implemented'));
+    try {
+      if (payload.metadata == null) {
+        return rsocket_flowable.Single.error(new Error('metadata is empty'));
+      }
+      var method = rsocket_rpc_frames.getMethod(payload.metadata);
+      var spanContext = rsocket_rpc_tracing.deserializeTraceData(this._tracer, payload.metadata);
+      switch (method) {
+        case 'setTagSelector':
+          return this.setTagSelectorMetrics(
+            this.setTagSelectorTrace(spanContext)(new rsocket_flowable.Single(subscriber => {
+              var binary = !payload.data || payload.data.constructor === Buffer || payload.data.constructor === Uint8Array ? payload.data : new Uint8Array(payload.data);
+              return this._service
+                .setTagSelector(netifi_broker_info_pb.TagSelectorContext.deserializeBinary(binary), payload.metadata)
+                .map(function (message) {
+                  return {
+                    data: Buffer.from(message.serializeBinary()),
+                    metadata: Buffer.alloc(0)
+                  }
+                }).subscribe(subscriber);
+              }
+            )
+          )
+        );
+        default:
+          return rsocket_flowable.Single.error(new Error('unknown method'));
+      }
+    } catch (error) {
+      return rsocket_flowable.Single.error(error);
+    }
   };
   ClusterManagementServiceServer.prototype.requestStream = function requestStream(payload) {
     return rsocket_flowable.Flowable.error(new Error('requestStream() is not implemented'));
