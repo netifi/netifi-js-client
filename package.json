@@ -10,7 +10,7 @@
     "Duncan Alexander <duncan@netifi.com>"
   ],
   "bugs": {
-    "url": "https://github.com/netifi/netifi-js/issues"
+    "url": "https://github.com/netifi/netifi-js-client/issues"
   },
   "files": [
     "dist"
@@ -33,9 +33,7 @@
     "prepublish": "node resources/prepublish.js",
     "pretty-check": "node resources/pretty.js --check",
     "pretty": "node resources/pretty.js",
-    "protoc": "protoc --proto_path=proto --proto_path=node_modules/rsocket-rpc-protobuf/proto --js_out=import_style=commonjs,binary:src --rsocket_rpc_out=src --plugin=protoc-gen-rsocket_rpc=node_modules/.bin/rsocket_rpc_js_protoc_plugin proto/**/*.proto proto/**/**/*.proto node_modules/rsocket-rpc-protobuf/proto/rsocket/*.proto",
-    "t": "npm run testonly",
-    "test": "npm run lint && npm run pretty-check && npm run testonly && npm run check",
+    "protoc": "protoc --proto_path=proto --proto_path=node_modules/rsocket-rpc-protobuf/proto --proto_path=node_modules/@netifi/broker-info-proto/src/main/proto --proto_path=node_modules/@netifi/tracing-proto/src/main/proto --js_out=import_style=commonjs,binary:src/proto --rsocket_rpc_out=src/proto --plugin=protoc-gen-rsocket_rpc=node_modules/.bin/rsocket_rpc_js_protoc_plugin proto/**/**/*.proto node_modules/rsocket-rpc-protobuf/proto/rsocket/*.proto node_modules/@netifi/**/src/main/proto/netifi/*.proto node_modules/@netifi/**/src/main/proto/**/**/*.proto",    "test": "npm run lint && npm run pretty-check && npm run testonly && npm run check",
     "testonly": "npm run build && babel-node ./node_modules/.bin/_mocha $npm_package_options_mocha"
   },
   "resolutions": {
@@ -64,6 +62,8 @@
     "@babel/node": "^7.2.2",
     "@babel/preset-env": "^7.4.4",
     "@babel/preset-flow": "^7.0.0",
+    "@netifi/broker-info-proto": "^1.6.5-SNAPSHOT",
+    "@netifi/tracing-proto": "^1.6.5-SNAPSHOT",
     "babel-eslint": "^10.0.1",
     "chai": "4.1.2",
     "eslint": "4.14.0",

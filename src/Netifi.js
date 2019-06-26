@@ -18,7 +18,12 @@
 
 ('use-strict');
 
-import {DuplexConnection, Responder, ReactiveSocket, ISubscription} from 'rsocket-types';
+import {
+  DuplexConnection,
+  Responder,
+  ReactiveSocket,
+  ISubscription,
+} from 'rsocket-types';
 import {Single, Flowable} from 'rsocket-flowable';
 import type {PayloadSerializers} from 'rsocket-core/build/RSocketSerialization';
 import {BufferEncoders} from 'rsocket-core';
@@ -100,17 +105,19 @@ export default class Netifi {
     this._reconnecting = false;
 
     const destination =
-        config.setup.destination !== undefined
-          ? config.setup.destination
-          : uuid();
-    
-    this._tags = config.setup.tags !== undefined
-      ? {'com.netifi.destination': destination, ...config.setup.tags}
-      : {'com.netifi.destination': destination};
+      config.setup.destination !== undefined
+        ? config.setup.destination
+        : uuid();
 
-    this._keepAlive = config.setup.keepAlive !== undefined
-      ? config.setup.keepAlive
-      : 60000; /* 60s in ms */
+    this._tags =
+      config.setup.tags !== undefined
+        ? {'com.netifi.destination': destination, ...config.setup.tags}
+        : {'com.netifi.destination': destination};
+
+    this._keepAlive =
+      config.setup.keepAlive !== undefined
+        ? config.setup.keepAlive
+        : 60000; /* 60s in ms */
 
     this._lifetime =
       config.setup.lifetime !== undefined
@@ -127,12 +134,12 @@ export default class Netifi {
         : Date.now().toString();
 
     this._connectionId = new ConnectionId(connectionIdSeed);
-    
+
     const additionalFlagsLiteral = {
       public: false,
       ...config.setup.additionalFlags,
     };
-    
+
     this._additionalFlags = new AdditionalFlags(additionalFlagsLiteral);
 
     this._retryConnection = this._retryConnection.bind(this);
@@ -143,7 +150,9 @@ export default class Netifi {
 
     // this._rpcClientSubscriber handles the stream of sockets from each FlowableRpcClient created
     this._rpcClientSubscriber = {
-      onNext: (reactiveSocketOrError: ReactiveSocketOrError<Buffer, Buffer>) => {
+      onNext: (
+        reactiveSocketOrError: ReactiveSocketOrError<Buffer, Buffer>,
+      ) => {
         if (reactiveSocketOrError.error) {
           if (!this._connection) {
             // already trying to reconnect
@@ -154,8 +163,7 @@ export default class Netifi {
           this._connection && this._connection.close();
           this._connection = null;
           this._retryConnection();
-        }
-        else {
+        } else {
           // we have received a socket
           this._connection = reactiveSocketOrError.reactiveSocket;
           this._reconnecting = false;
@@ -188,7 +196,7 @@ export default class Netifi {
             }
           });
         }
-      }
+      },
     };
   }
 
@@ -211,13 +219,16 @@ export default class Netifi {
         ? this._config.transport.connection
         : new RSocketWebSocketClient(
             {
-              url: this._config.transport.url ? this._config.transport.url : 'ws://',
+              url: this._config.transport.url
+                ? this._config.transport.url
+                : 'ws://',
               wsCreator: this._config.transport.wsCreator,
             },
             BufferEncoders,
           );
 
-    const responder = this._config.responder || new UnwrappingRSocket(this._requestHandler);
+    const responder =
+      this._config.responder || new UnwrappingRSocket(this._requestHandler);
 
     const finalConfig: ClientConfig<Buffer, Buffer> = {
       setup: {

@@ -3,8 +3,8 @@
 'use strict';
 
 import http from 'http';
-import {Span} from '../zipkin/proto3/zipkin_pb';
-import {Ack} from '../netifi/testing/tracing_pb';
+import {Span} from '../proto/zipkin/proto3/zipkin_pb';
+import {Ack} from '../proto/netifi/testing/tracing_pb';
 import {Flowable, Single} from 'rsocket-flowable';
 import {QueuingFlowableProcessor} from 'rsocket-rpc-core';
 

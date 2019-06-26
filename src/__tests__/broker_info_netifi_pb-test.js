@@ -26,7 +26,7 @@ import NetifiTlsClient from '../NetifiTlsClient';
 
 import Deferred from 'fbjs/lib/Deferred';
 
-import {BrokerInfoServiceClient} from '../netifi/broker_info_rsocket_pb';
+import {BrokerInfoServiceClient} from '../proto/netifi/broker_info_rsocket_pb';
 
 import {Empty} from 'google-protobuf/google/protobuf/empty_pb';
 

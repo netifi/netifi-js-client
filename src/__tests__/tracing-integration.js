@@ -1,20 +1,20 @@
 'use strict';
 
-const {ZipkinTracingService} = require('../../dist/tracing/tracingService');
-const {BasicTracer} = require('../../dist/tracing/tracer');
-const {Ping} = require('../netifi/testing/ping-pong_pb');
+const {ZipkinTracingService} = require('../tracing/tracingService');
+const {BasicTracer} = require('../tracing/tracer');
+const {Ping} = require('../proto/netifi/testing/ping-pong_pb');
 const {
   PingPongServiceClient,
   PingPongServiceServer,
-} = require('../netifi/testing/ping-pong_rsocket_pb');
+} = require('../proto/netifi/testing/ping-pong_rsocket_pb');
 const {
   NetifiTracingServiceServer,
-} = require('../netifi/testing/tracing_rsocket_pb');
-const Netifi = require('../../dist/Netifi').default;
-const {PongService} = require('../../dist/tracing/pongService');
+} = require('../proto/netifi/testing/tracing_rsocket_pb');
+const {Netifi} = require('../index');
+const {PongService} = require('../tracing/pongService');
 const {BufferEncoders} = require('rsocket-core');
 const RSocketTcpClient = require('rsocket-tcp-client').default;
-const NetifiTlsClient = require('../../dist/NetifiTlsClient').default;
+const NetifiTlsClient = require('../NetifiTlsClient').default;
 const WebSocket = require('ws');
 global.WebSocket = WebSocket;
 

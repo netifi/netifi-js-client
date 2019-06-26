@@ -1,6 +1,6 @@
 'use strict';
 
-import {Ping, Pong} from '../netifi/testing/ping-pong_pb';
+import {Ping, Pong} from '../proto/netifi/testing/ping-pong_pb';
 import {Single, Flowable} from 'rsocket-flowable';
 
 export class PongService {
