@@ -12,18 +12,18 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * @flow
  */
 
 'use strict';
 
-import {join} from 'path';
-import {exec} from './util';
+import Netifi from './Netifi';
+import toObservable from './rx/FlowableAdapter';
 
-exec(
-  'babel',
-  'src',
-  '--ignore',
-  '**/__tests__/**,**/proto/**',
-  '--out-dir',
-  'dist',
-);
+/**
+ * The public API of the `client` package.
+ */
+export type {NetifiConfig} from './Netifi';
+
+export {Netifi, toObservable};
