@@ -21,6 +21,7 @@ import ipaddr from 'ipaddr.js';
 
 import {encodeFrame, decodeFrame, FrameTypes} from '../frames';
 import ConnectionId from '../frames/ConnectionId';
+import {JWT_AUTHENTICATION} from '../frames/DestinationSetupFlyweight';
 import AdditionalFlags from '../frames/AdditionalFlags';
 
 describe('BROKER_SETUP', () => {
@@ -111,6 +112,30 @@ describe('DESTINATION_SETUP', () => {
     expect(input.accessToken).to.deep.equal(frame.accessToken);
     expect(input.tags).to.deep.equal(frame.tags);
     expect(input.additionalFlags.sum()).to.equal(frame.additionalFlags.sum());
+  });
+
+  it('updates the JWT flag if a JWT is provided in setup', () => {
+    const group = 'group';
+    const accessKey = JWT_AUTHENTICATION;
+    const accessToken = Buffer.from([0x0a, 0x0b, 0x0c]);
+    const tags = {key: 'value'};
+    const input = {
+      type: FrameTypes.DESTINATION_SETUP,
+      group,
+      accessKey,
+      accessToken,
+      tags,
+      connectionId: new ConnectionId('abc'),
+      additionalFlags: new AdditionalFlags({
+        public: false,
+        useJWT: true,
+      }),
+    };
+
+    const buffer = encodeFrame(input);
+    const frame = decodeFrame(buffer);
+    expect(input.additionalFlags.sum()).to.equal(2);
+    expect(frame.additionalFlags.sum()).to.equal(2);
   });
 });
 

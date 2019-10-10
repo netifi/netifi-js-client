@@ -46,6 +46,8 @@ const ADDITIONAL_FLAGS_SIZE = 2;
 const KEY_LENGTH_SIZE = 4;
 const VALUE_LENGTH_SIZE = 4;
 
+export const JWT_AUTHENTICATION = 0x01;
+
 export function encodeDestinationSetupFrame(
   frame: DestinationSetupFrame,
 ): Buffer {
