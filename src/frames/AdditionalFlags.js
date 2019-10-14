@@ -1,5 +1,6 @@
 const bitflags = {
   public: 1,
+  useJWT: 2,
 };
 
 export default class AdditionalFlags {

@@ -36,9 +36,17 @@ export default function toObservable(
   rsocketType: Flowable<T> | Single<T>,
   batchSize?: number,
 ) {
-  if (rsocketType instanceof Flowable || rsocketType.constructor.name === Flowable.name || rsocketType.constructor.name === 'Flowable') {
+  if (
+    rsocketType instanceof Flowable ||
+    rsocketType.constructor.name === Flowable.name ||
+    rsocketType.constructor.name === 'Flowable'
+  ) {
     return from(new ObservableFlowable(rsocketType, batchSize));
-  } else if (rsocketType instanceof Single || rsocketType.constructor.name === Single.name || rsocketType.constructor.name === 'Single') {
+  } else if (
+    rsocketType instanceof Single ||
+    rsocketType.constructor.name === Single.name ||
+    rsocketType.constructor.name === 'Single'
+  ) {
     return from(new ObservableSingle(rsocketType));
   } else {
     console.log('Unrecognized type: ' + rsocketType);

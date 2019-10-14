@@ -24,7 +24,6 @@ import type {
   Payload,
   ReactiveSocket,
   SetupFrame,
-  Responder,
 } from 'rsocket-types';
 
 import {Flowable, Single, every} from 'rsocket-flowable';
