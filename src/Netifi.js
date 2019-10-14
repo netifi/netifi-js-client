@@ -27,10 +27,15 @@ import {
 import {Single, Flowable} from 'rsocket-flowable';
 import type {PayloadSerializers} from 'rsocket-core/build/RSocketSerialization';
 import {BufferEncoders} from 'rsocket-core';
+import {encodeMetadata} from 'rsocket-rpc-frames';
 import {RequestHandlingRSocket} from 'rsocket-rpc-core';
 import type {ClientConfig} from 'rsocket-rpc-core';
 import invariant from 'fbjs/lib/invariant';
-import {DeferredConnectingRSocket, UnwrappingRSocket} from './rsocket';
+import {
+  DeferredConnectingRSocket,
+  WrappingRSocket,
+  UnwrappingRSocket,
+} from './rsocket';
 import {FrameTypes, encodeFrame} from './frames';
 import type {Tags} from './frames';
 
@@ -304,6 +309,22 @@ export default class Netifi {
       {'com.netifi.destination': destination},
       this._connect,
     );
+  }
+
+  // allows a named RSocket to be located in a group
+  groupNamedRSocket(name: string, group: string): Responder<Buffer, Buffer> {
+    const groupRSocket = this.group(group);
+    return new WrappingRSocket(payload => {
+      return {
+        data: payload.data,
+        metadata: encodeMetadata(
+          name,
+          name,
+          undefined,
+          payload.metadata || Buffer.alloc(0),
+        ),
+      };
+    }, groupRSocket);
   }
 
   addService(service: string, handler: Responder<Buffer, Buffer>): void {
