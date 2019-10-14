@@ -33,7 +33,7 @@ const netifi = Netifi.create({
   //destination: generated UUID if omitted  
     accessKey: 9007199254740991,
     accessToken: 'kTBDVtfRBO4tHOnZzSyY5ym2kfY=',
-  //jwt: 'jwt.encoded.string' either a JWT or access key and token should be supplied, depending on your broker's auth setup.
+  //jwt: 'jwt.encoded.string' depending on your broker's authentication setup, you can either provide an access key and token, or use a JWT.
   },
   transport: {
     url
