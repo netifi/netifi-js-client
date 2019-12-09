@@ -32,7 +32,8 @@ const netifi = Netifi.create({
     group: 'netifi-example',
   //destination: generated UUID if omitted  
     accessKey: 9007199254740991,
-    accessToken: 'kTBDVtfRBO4tHOnZzSyY5ym2kfY='
+    accessToken: 'kTBDVtfRBO4tHOnZzSyY5ym2kfY=',
+  //jwt: 'jwt.encoded.string' depending on your broker's authentication setup, you can either provide an access key and token, or use a JWT.
   },
   transport: {
     url
@@ -51,11 +52,13 @@ export type NetifiConfig = {|
     tags?: Tags,
     keepAlive?: number,
     lifetime?: number,
-    accessKey: number,
-    accessToken: string,
+    accessKey?: number,
+    accessToken?: string,
+    jwt?: string,
     connectionId?: string,
     additionalFlags?: {|
       public?: boolean,
+      useJWT?: boolean
     |}
   |},
   transport: {|

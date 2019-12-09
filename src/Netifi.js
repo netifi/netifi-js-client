@@ -24,21 +24,25 @@ import {
   ReactiveSocket,
   ISubscription,
 } from 'rsocket-types';
-import {Single, Flowable} from 'rsocket-flowable';
+import {Single} from 'rsocket-flowable';
 import type {PayloadSerializers} from 'rsocket-core/build/RSocketSerialization';
 import {BufferEncoders} from 'rsocket-core';
+import {encodeMetadata} from 'rsocket-rpc-frames';
 import {RequestHandlingRSocket} from 'rsocket-rpc-core';
 import type {ClientConfig} from 'rsocket-rpc-core';
 import invariant from 'fbjs/lib/invariant';
-import {DeferredConnectingRSocket, UnwrappingRSocket} from './rsocket';
+import {
+  DeferredConnectingRSocket,
+  WrappingRSocket,
+  UnwrappingRSocket,
+} from './rsocket';
 import {FrameTypes, encodeFrame} from './frames';
 import type {Tags} from './frames';
-
 import RSocketWebSocketClient from 'rsocket-websocket-client';
 import ConnectionId from './frames/ConnectionId';
+import {JWT_AUTHENTICATION} from './frames/DestinationSetupFlyweight';
 import AdditionalFlags from './frames/AdditionalFlags';
 import uuid from 'uuid/v4';
-
 import FlowableRpcClient from './rsocket/FlowableRpcClient';
 import type {ReactiveSocketOrError} from './rsocket/FlowableRpcClient';
 
@@ -50,8 +54,9 @@ export type NetifiConfig = {|
     tags?: Tags,
     keepAlive?: number,
     lifetime?: number,
-    accessKey: number,
-    accessToken: string,
+    accessKey?: number,
+    accessToken?: string,
+    jwt?: string,
     connectionId?: string,
     additionalFlags?: {|
       public?: boolean,
@@ -81,6 +86,7 @@ export default class Netifi {
   _lastConnectionAttemptTs: number;
   _lifetime: number;
   _reconnecting: boolean;
+  _shouldReconnect: boolean;
   _requestHandler: RequestHandlingRSocket;
   _rpcClientSubscriber: Object;
   _rpcClientSubscription: ISubscription;
@@ -103,6 +109,7 @@ export default class Netifi {
     this._subscribers = [];
     this._attempts = 0;
     this._reconnecting = false;
+    this._shouldReconnect = true;
 
     const destination =
       config.setup.destination !== undefined
@@ -124,9 +131,19 @@ export default class Netifi {
         ? config.setup.lifetime
         : 360000; /* 360s in ms */
 
-    this._accessKey = config.setup.accessKey;
-
-    this._accessToken = Buffer.from(config.setup.accessToken, 'base64');
+    if (config.setup.jwt) {
+      // get credentials from JWT
+      this._accessKey = JWT_AUTHENTICATION;
+      this._accessToken = Buffer.from(config.setup.jwt);
+    } else if (config.setup.accessKey && config.setup.accessToken) {
+      // get access key and token from config
+      this._accessKey = config.setup.accessKey;
+      this._accessToken = Buffer.from(config.setup.accessToken, 'base64');
+    } else {
+      throw new Error(
+        'Netifi: Credentials were not provided in config setup. Please provide either a JSON Web Token or an accessKey and accessToken.',
+      );
+    }
 
     const connectionIdSeed =
       typeof config.setup.connectionId !== 'undefined'
@@ -137,6 +154,7 @@ export default class Netifi {
 
     const additionalFlagsLiteral = {
       public: false,
+      useJWT: Boolean(config.setup.jwt),
       ...config.setup.additionalFlags,
     };
 
@@ -261,8 +279,8 @@ export default class Netifi {
   }
 
   _retryConnection(): void {
-    if (this._reconnecting) {
-      // a timeout is already running
+    if (this._reconnecting || !this._shouldReconnect) {
+      // a timeout is already running or close() was called
       return;
     }
     const retryDuration = this.calculateRetryDuration();
@@ -306,11 +324,28 @@ export default class Netifi {
     );
   }
 
+  // allows a named RSocket to be located in a group
+  groupNamedRSocket(name: string, group: string): Responder<Buffer, Buffer> {
+    const groupRSocket = this.group(group);
+    return new WrappingRSocket(payload => {
+      return {
+        data: payload.data,
+        metadata: encodeMetadata(
+          name,
+          name,
+          undefined,
+          payload.metadata || Buffer.alloc(0),
+        ),
+      };
+    }, groupRSocket);
+  }
+
   addService(service: string, handler: Responder<Buffer, Buffer>): void {
     this._requestHandler.addService(service, handler);
   }
 
   close(): void {
+    this._shouldReconnect = false;
     this._client.close();
   }
 
@@ -330,12 +365,13 @@ export default class Netifi {
 
   static create(config: NetifiConfig): Netifi {
     invariant(
-      config &&
-        config.setup &&
-        config.setup.accessKey &&
-        config.setup.accessToken &&
-        config.transport,
-      'Netifi: Falsey config is invalid. At minimum transport config, group, access key, and access token are required.',
+      config && config.setup && config.transport,
+      'Netifi: Config is invalid. At minimum  a transport config, a group, and setup properties are required.',
+    );
+
+    invariant(
+      (config.setup.accessKey && config.setup.accessToken) || config.setup.jwt,
+      'Netifi: Config setup should provide either an access key and token, or a JSON Web Token.',
     );
 
     invariant(
